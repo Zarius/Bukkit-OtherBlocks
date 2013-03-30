@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.odspecialevents;
 
 import java.util.Arrays;
@@ -24,27 +23,31 @@ import com.gmail.zariust.otherdrops.special.SpecialResult;
 import com.gmail.zariust.otherdrops.special.SpecialResultHandler;
 
 public class WeatherEvents extends SpecialResultHandler {
-	@Override
-	public SpecialResult getNewEvent(String name) {
-		if(name.equalsIgnoreCase("LIGHTNING")) return new LightningEvent(this);
-		else if(name.equalsIgnoreCase("STORM")) return new StormEvent(this);
-		else if(name.equalsIgnoreCase("THUNDERSTORM")) return new ThunderEvent(this);
-		return null;
-	}
-	
-	@Override
-	public void onLoad() {
-		logInfo("Weather v" + getVersion() + " loaded.", Verbosity.HIGH);
-	}
-	
-	@Override
-	public List<String> getEvents() {
-		return Arrays.asList("LIGHTNING", "STORM", "THUNDERSTORM");
-	}
-	
-	@Override
-	public String getName() {
-		return "Weather";
-	}
-	
+
+    @Override
+    public SpecialResult getNewEvent(String name) {
+        if (name.equalsIgnoreCase("LIGHTNING")) {
+            return new LightningEvent(this);
+        } else if (name.equalsIgnoreCase("STORM")) {
+            return new StormEvent(this);
+        } else if (name.equalsIgnoreCase("THUNDERSTORM")) {
+            return new ThunderEvent(this);
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoad() {
+        logInfo("Weather v" + getVersion() + " loaded.", Verbosity.HIGH);
+    }
+
+    @Override
+    public List<String> getEvents() {
+        return Arrays.asList("LIGHTNING", "STORM", "THUNDERSTORM");
+    }
+
+    @Override
+    public String getName() {
+        return "Weather";
+    }
 }

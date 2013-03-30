@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops;
 
 import java.util.Set;
@@ -30,136 +29,135 @@ import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.Plugin;
 
 public class PlayerConsoleWrapper implements ConsoleCommandSender {
-	private static final ConsoleCommandSender console = Bukkit.getConsoleSender();
-	private boolean suppress;
-	private Player caller;
-	
-	public PlayerConsoleWrapper(Player player, boolean suppressMessages) {
-		caller = player;
-		suppress = suppressMessages;
-	}
-	
-	@Override
-	public String getName() {
-		return caller.getName();
-	}
-	
-	@Override
-	public void sendMessage(String message) {
-		if(suppress) console.sendMessage(message);
-		else caller.sendMessage(message);
-	}
 
-	@Override
-	public Server getServer() {
-		return console.getServer();
-	}
+    private static final ConsoleCommandSender console = Bukkit.getConsoleSender();
+    private boolean suppress;
+    private Player caller;
 
-	@Override
-	public boolean isPermissionSet(String name) {
-		return console.isPermissionSet(name);
-	}
+    public PlayerConsoleWrapper(Player player, boolean suppressMessages) {
+        caller = player;
+        suppress = suppressMessages;
+    }
 
-	@Override
-	public boolean isPermissionSet(Permission perm) {
-		return console.isPermissionSet(perm);
-	}
+    @Override
+    public String getName() {
+        return caller.getName();
+    }
 
-	@Override
-	public boolean hasPermission(String name) {
-		return console.hasPermission(name);
-	}
+    @Override
+    public void sendMessage(String message) {
+        if (suppress) {
+            console.sendMessage(message);
+        } else {
+            caller.sendMessage(message);
+        }
+    }
 
-	@Override
-	public boolean hasPermission(Permission perm) {
-		return console.hasPermission(perm);
-	}
+    @Override
+    public Server getServer() {
+        return console.getServer();
+    }
 
-	@Override
-	public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value) {
-		return console.addAttachment(plugin, name, value);
-	}
+    @Override
+    public boolean isPermissionSet(String name) {
+        return console.isPermissionSet(name);
+    }
 
-	@Override
-	public PermissionAttachment addAttachment(Plugin plugin) {
-		return console.addAttachment(plugin);
-	}
+    @Override
+    public boolean isPermissionSet(Permission perm) {
+        return console.isPermissionSet(perm);
+    }
 
-	@Override
-	public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value, int ticks) {
-		return console.addAttachment(plugin, name, value, ticks);
-	}
+    @Override
+    public boolean hasPermission(String name) {
+        return console.hasPermission(name);
+    }
 
-	@Override
-	public PermissionAttachment addAttachment(Plugin plugin, int ticks) {
-		return console.addAttachment(plugin, ticks);
-	}
+    @Override
+    public boolean hasPermission(Permission perm) {
+        return console.hasPermission(perm);
+    }
 
-	@Override
-	public void removeAttachment(PermissionAttachment attachment) {
-		console.removeAttachment(attachment);
-	}
+    @Override
+    public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value) {
+        return console.addAttachment(plugin, name, value);
+    }
 
-	@Override
-	public void recalculatePermissions() {
-		console.recalculatePermissions();
-	}
+    @Override
+    public PermissionAttachment addAttachment(Plugin plugin) {
+        return console.addAttachment(plugin);
+    }
 
-	@Override
-	public Set<PermissionAttachmentInfo> getEffectivePermissions() {
-		return console.getEffectivePermissions();
-	}
+    @Override
+    public PermissionAttachment addAttachment(Plugin plugin, String name, boolean value, int ticks) {
+        return console.addAttachment(plugin, name, value, ticks);
+    }
 
-	@Override
-	public boolean isOp() {
-		return console.isOp();
-	}
+    @Override
+    public PermissionAttachment addAttachment(Plugin plugin, int ticks) {
+        return console.addAttachment(plugin, ticks);
+    }
 
-	@Override
-	public void setOp(boolean value) {
-		console.setOp(value);
-	}
+    @Override
+    public void removeAttachment(PermissionAttachment attachment) {
+        console.removeAttachment(attachment);
+    }
 
-	@Override
-	public void sendMessage(String[] arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void recalculatePermissions() {
+        console.recalculatePermissions();
+    }
 
-	@Override
-	public void abandonConversation(Conversation arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public Set<PermissionAttachmentInfo> getEffectivePermissions() {
+        return console.getEffectivePermissions();
+    }
 
-	@Override
-	public void acceptConversationInput(String arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public boolean isOp() {
+        return console.isOp();
+    }
 
-	@Override
-	public boolean beginConversation(Conversation arg0) {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public void setOp(boolean value) {
+        console.setOp(value);
+    }
 
-	@Override
-	public boolean isConversing() {
-		// TODO Auto-generated method stub
-		return false;
-	}
+    @Override
+    public void sendMessage(String[] arg0) {
+        // TODO Auto-generated method stub
+    }
 
-	@Override
-	public void sendRawMessage(String arg0) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void abandonConversation(Conversation arg0) {
+        // TODO Auto-generated method stub
+    }
 
-	@Override
-	public void abandonConversation(Conversation arg0,
-			ConversationAbandonedEvent arg1) {
-		// TODO Auto-generated method stub
-		
-	}
+    @Override
+    public void acceptConversationInput(String arg0) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public boolean beginConversation(Conversation arg0) {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean isConversing() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public void sendRawMessage(String arg0) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void abandonConversation(Conversation arg0,
+            ConversationAbandonedEvent arg1) {
+        // TODO Auto-generated method stub
+    }
 }

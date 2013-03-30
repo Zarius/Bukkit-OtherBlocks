@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.listener;
 
 import org.bukkit.event.EventHandler;
@@ -24,18 +23,17 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import com.gmail.zariust.otherdrops.OtherDrops;
 import com.gmail.zariust.otherdrops.event.OccurredEvent;
 
-public class OdPlayerRespawnListener implements Listener
-{
-	private final OtherDrops parent;
+public class OdPlayerRespawnListener implements Listener {
 
-	public OdPlayerRespawnListener(OtherDrops instance) {
-		parent = instance;
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerRespawn(PlayerRespawnEvent event) {
-		OccurredEvent drop = new OccurredEvent(event);
-		parent.performDrop(drop);
-	}
+    private final OtherDrops parent;
 
+    public OdPlayerRespawnListener(OtherDrops instance) {
+        parent = instance;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        OccurredEvent drop = new OccurredEvent(event);
+        parent.performDrop(drop);
+    }
 }

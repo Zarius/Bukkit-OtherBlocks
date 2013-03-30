@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.event;
 
 import static com.gmail.zariust.common.Verbosity.HIGHEST;
@@ -83,779 +82,888 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 /**
  * An actual drop that has occurred and may match one of the configured drops.
  */
-public class OccurredEvent extends AbstractDropEvent implements Cancellable
-{
-	private Agent tool;
-	private World world;
-	private Set<String> regions;
-	private Weather weather;
-	private BlockFace face;
-	private Biome biome;
-	private long time;
-	private int height;
-	private double attackRange;
-	private int lightLevel;
-	private Location location;
-	private Cancellable event;
-	private Event realEvent;
-	private boolean denied;
-	private boolean overrideDefault;
-	private boolean overrideDefaultXp;
-	private double customDropAmount;
-	private BlockTarget replaceBlockWith;
-	private boolean overrideEquipment;
+public class OccurredEvent extends AbstractDropEvent implements Cancellable {
 
-	// Constructors
-	public OccurredEvent(BlockBreakEvent evt) {
-		super(new BlockTarget(evt.getBlock()),Action.BREAK);
-		event = evt;
-		Block block = evt.getBlock();
-		setLocationWorldBiomeLight(block);
-		setWeatherTimeHeight();
-		setTool(evt.getPlayer());
-		attackRange = measureRange(location, evt.getPlayer().getLocation(), "Block '"+block.getType().toString()+"' broken by '"+tool.toString()+"'");
-		setRegions();
-	}
+    private Agent tool;
+    private World world;
+    private Set<String> regions;
+    private Weather weather;
+    private BlockFace face;
+    private Biome biome;
+    private long time;
+    private int height;
+    private double attackRange;
+    private int lightLevel;
+    private Location location;
+    private Cancellable event;
+    private Event realEvent;
+    private boolean denied;
+    private boolean overrideDefault;
+    private boolean overrideDefaultXp;
+    private double customDropAmount;
+    private BlockTarget replaceBlockWith;
+    private boolean overrideEquipment;
 
-	public OccurredEvent(final EntityDeathEvent evt) {
-		super(getEntityTarget(evt.getEntity()),Action.BREAK);
-		setRealEvent(evt);
-		event = new Cancellable() {
-			// Storing as an array is a crude way to get a copy
-			private final ItemStack[] drops = evt.getDrops().toArray(new ItemStack[0]);
-			@Override
-			public boolean isCancelled() {
-				return evt.getDrops().isEmpty();
-			}
-			@Override
-			public void setCancelled(boolean cancel) {
-				// no need to do anything in here as we deal with clearing drops at the end of OtherDrops.performDrops()
-			}
-		};
-		Entity e = evt.getEntity();
-		setLocationWorldBiomeLight(e);
-		setWeatherTimeHeight();
-		setTool(evt.getEntity().getLastDamageCause());
-		if (tool == null) {
-			Log.logWarning("EntityDeathEvent: tool is null, this shouldn't happen! Entity:"+e.toString()+" lastDamage: "+e.getLastDamageCause().getCause().toString(), Verbosity.NORMAL);			
-			return;
-		}
-		attackRange = measureRange(location, tool.getLocation(), "Entity '"+e.toString()+"' killed by '"+tool.toString()+"'");		
-		setRegions();
-	}
-	public OccurredEvent(EntityDamageEvent evt) {
-		super(getEntityTarget(evt.getEntity()),Action.LEFT_CLICK);
-		event = evt;
-		Entity e = evt.getEntity();
-		setLocationWorldBiomeLight(e);
-		setWeatherTimeHeight();
-		if(evt instanceof EntityDamageByEntityEvent) {
-			EntityDamageByEntityEvent evt2 = (EntityDamageByEntityEvent) evt;
-			setTool(evt2.getDamager());
-			if (tool != null) attackRange = measureRange(location, evt2.getDamager().getLocation(), "Entity '"+e.toString()+"' damaged by '"+tool.toString()+"'");
-		} else setTool(evt.getCause());
-		setRegions();
-	}
-	
-	public OccurredEvent(EntityDamageEvent evt, String string) {
-		super(getEntityTarget(evt.getEntity()),Action.HIT);
-		event = evt;
-		Entity e = evt.getEntity();
-		setLocationWorldBiomeLight(e);
-		setWeatherTimeHeight();
-		if(evt instanceof EntityDamageByEntityEvent) {
-			EntityDamageByEntityEvent evt2 = (EntityDamageByEntityEvent) evt;
-			setTool(evt2.getDamager());
-			if (evt2.getDamager() == null) {
-				Log.logInfo("EntityDamageEvent: damager is null, please inform developer.");
-			} else if (e == null) {
-				Log.logInfo("EntityDamageEvent: entity is null, please inform developer.");
-			} else if (tool == null) {
-				if (!(e instanceof TNTPrimed)) {
-					Log.logInfo("EntityDamageEvent: tool is null, please inform developer if this wasn't due to TNT (or TNT minecart).", Verbosity.HIGH);
-				}
-			} else {
-				Log.logInfo("Damager: "+evt2.getDamager().toString(), Verbosity.HIGH);
-				attackRange = measureRange(location, evt2.getDamager().getLocation(), "Entity '"+e.toString()+"' damaged by '"+tool.toString()+"'");
-			}
-		} else setTool(evt.getCause());
-		setRegions();
-	}
+    // Constructors
+    public OccurredEvent(BlockBreakEvent evt) {
+        super(new BlockTarget(evt.getBlock()), Action.BREAK);
+        event = evt;
+        Block block = evt.getBlock();
+        setLocationWorldBiomeLight(block);
+        setWeatherTimeHeight();
+        setTool(evt.getPlayer());
+        attackRange = measureRange(location, evt.getPlayer().getLocation(), "Block '" + block.getType().toString() + "' broken by '" + tool.toString() + "'");
+        setRegions();
+    }
 
-	public OccurredEvent(PaintingBreakEvent evt) {
-		super(new VehicleTarget(evt.getPainting()),Action.BREAK);
-		event = evt;
-		Painting canvas = evt.getPainting();
-		setLocationWorldBiomeLight(canvas);
-		setWeatherTimeHeight();
-		if(evt instanceof PaintingBreakByEntityEvent) {
-			PaintingBreakByEntityEvent evt2 = (PaintingBreakByEntityEvent) evt;
-			Entity remover = evt2.getRemover();
-			setTool(remover);
-			attackRange = measureRange(location, remover.getLocation(), "Painting broken by '"+tool.toString()+"'");
-		} else {
-			switch(evt.getCause()) {
-			case ENTITY:
-				setTool(DamageCause.ENTITY_ATTACK);
-				break;
-			case FIRE:
-				setTool(DamageCause.FIRE_TICK);
-				break;
-			case OBSTRUCTION:
-				setTool(DamageCause.SUFFOCATION);
-				break;
-			case PHYSICS:
-				setTool(DamageCause.CONTACT);
-				break;
-			case WATER:
-				setTool(DamageCause.DROWNING);
-				break;
-			}
-		}
-		setRegions();
-	}
-	public OccurredEvent(LeavesDecayEvent evt) {
-		super(new BlockTarget(evt.getBlock()),Action.LEAF_DECAY);
-		event = evt;
-		setLocationWorldBiomeLight(evt.getBlock());
-		setWeatherTimeHeight();
-		tool = null;
-		setRegions();
-	}
-	public OccurredEvent(VehicleDestroyEvent evt) {
-		super(new VehicleTarget(evt.getVehicle()),Action.BREAK);
-		event = evt;
-		setLocationWorldBiomeLight(evt.getVehicle());
-		setWeatherTimeHeight();
-		setTool(evt.getAttacker()); // Note: getAttacker is NULL for environmental attack/break
-		// environmental attacks (eg. burning) do not have a location, so range is not valid.
-		if (evt.getAttacker() instanceof Player) {
-			attackRange = measureRange(location, evt.getAttacker().getLocation(), "Vehicle '"+evt.getVehicle().getType().toString()+"' destroyed by '"+tool.toString()+"'");
-		} else {
-			attackRange = 0;
-		}
-		
-		setRegions();
-	}
-	public OccurredEvent(PlayerInteractEvent evt) {
-		super(new BlockTarget(evt.getClickedBlock()),Action.fromInteract(evt.getAction()));
-		event = evt;
-		setLocationWorldBiomeLight(evt.getClickedBlock());
-		face = evt.getBlockFace();
-		setWeatherTimeHeight();
-		attackRange = measureRange(location, evt.getPlayer().getLocation(), "Player '"+evt.getPlayer().getName()+"' interacted with "+evt.getClickedBlock().toString());		
-		setTool(evt.getPlayer());
-		setRegions();
-	}
+    public OccurredEvent(final EntityDeathEvent evt) {
+        super(getEntityTarget(evt.getEntity()), Action.BREAK);
+        setRealEvent(evt);
+        event = new Cancellable() {
+            // Storing as an array is a crude way to get a copy
+            private final ItemStack[] drops = evt.getDrops().toArray(new ItemStack[0]);
 
-	public OccurredEvent(PlayerInteractEntityEvent evt) {
-		super(getEntityTarget(evt.getRightClicked()),Action.RIGHT_CLICK);
-		event = evt;
-		setLocationWorldBiomeLight(evt.getRightClicked());
-		setWeatherTimeHeight();
-		attackRange = measureRange(location, evt.getPlayer().getLocation(), "Player '"+evt.getPlayer().getName()+"' interacted with "+evt.getRightClicked().toString());
-		setTool(evt.getPlayer());
-		setRegions();
-	}
-	public OccurredEvent(BlockFromToEvent evt) {
-		super(new BlockTarget(evt.getToBlock()),Action.BREAK);
-		event = evt;
-		setLocationWorldBiomeLight(evt.getToBlock());
-		setWeatherTimeHeight();
-		tool = new EnvironmentAgent(DamageCause.CUSTOM);
-		setRegions();
-	}
-	public OccurredEvent(EntityExplodeEvent evt, Block block) {
-		super(new BlockTarget(block),Action.BREAK);
-		event = evt;
-		setLocationWorldBiomeLight(block);
-		setWeatherTimeHeight();
-		tool = new ExplosionAgent(evt.getEntity());
-		setRegions();
-	}
-	// Generic constructors
-	/**
-	 * Create a drop with a block as its target.
-	 * @param block The block.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The agent which caused this drop.
-	 * @throws DropCreateException If you try to use a wildcard target or agent.
-	 */
-	public OccurredEvent(Block block, Action action, Agent agent) throws DropCreateException {
-		super(new BlockTarget(block), action);
-		event = null;
-		setLocationWorldBiomeLight(block);
-		setWeatherTimeHeight();
-		setTool(agent);
-		setRegions();
-	}
-	/**
-	 * Create a drop with a block as its target and an entity agent.
-	 * @param block The block.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The agent which caused this drop.
-	 */
-	public OccurredEvent(Block block, Action action, Entity agent) {
-		super(new BlockTarget(block), action);
-		event = null;
-		setLocationWorldBiomeLight(block);
-		setWeatherTimeHeight();
-		setTool(agent);
-		setRegions();
-	}
-	/**
-	 * Create a cancellable drop with a block as its target.
-	 * @param block The block.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The agent which caused this drop.
-	 * @param evt An interface through which the default behaviour of this drop may be cancelled.
-	 * @throws DropCreateException If you try to use a wildcard target or agent.
-	 */
-	public OccurredEvent(Block block, Action action, Agent agent, Cancellable evt) throws DropCreateException {
-		this(block, action, agent);
-		event = evt;
-	}
-	/**
-	 * Create a cancellable drop with a block as its target and an entity agent.
-	 * @param block The block.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The agent which caused this drop.
-	 * @param evt An interface through which the default behaviour of this drop may be cancelled.
-	 */
-	public OccurredEvent(Block block, Action action, Entity agent, Cancellable evt) {
-		this(block, action, agent);
-		event = evt;
-	}
-	/**
-	 * Create a drop with an entity as its target.
-	 * @param entity The entity.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The agent which caused this drop.
-	 * @throws DropCreateException If you try to use a wildcard target or agent.
-	 */
-	public OccurredEvent(Entity entity, Action action, Agent agent) throws DropCreateException {
-		super(getEntityTarget(entity), action);
-		event = null;
-		setLocationWorldBiomeLight(entity);
-		setTool(agent);
-		setRegions();
-	}
-	/**
-	 * Create a drop with an entity as its target and an entity agent.
-	 * @param entity The entity.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The entity which caused this drop.
-	 */
-	public OccurredEvent(Entity entity, Action action, Entity agent) {
-		super(getEntityTarget(entity), action);
-		event = null;
-		setLocationWorldBiomeLight(entity);
-		setTool(agent);
-		setRegions();
-	}
-	/**
-	 * Create a cancellable drop with an entity as its target.
-	 * @param entity The entity.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The agent which caused this drop.
-	 * @param evt An interface through which the default behaviour of this drop may be cancelled.
-	 * @throws DropCreateException If you try to use a wildcard target or agent.
-	 */
-	public OccurredEvent(Entity entity, Action action, Agent agent, Cancellable evt) throws DropCreateException {
-		this(entity, action, agent);
-		event = evt;
-	}
-	/**
-	 * Create a cancellable drop with an entity as its target and an entity agent.
-	 * @param entity The entity.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The entity which caused this drop.
-	 * @param evt An interface through which the default behaviour of this drop may be cancelled.
-	 */
-	public OccurredEvent(Entity entity, Action action, Entity agent, Cancellable evt) {
-		this(entity, action, agent);
-		event = evt;
-	}
-	/**
-	 * Create a drop with an arbitrary target.
-	 * @param targ The target which was the source of this drop.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The agent which caused this drop.
-	 * @throws DropCreateException If you try to use a wildcard target or agent.
-	 */
-	public OccurredEvent(Target targ, Action action, Agent agent) throws DropCreateException {
-		super(targ, action, true);
-		event = null;
-		setLocationWorldBiomeLight(targ);
-		setTool(agent);
-		setRegions();
-	}
-	/**
-	 * Create a drop with an arbitrary target and an entity agent.
-	 * @param targ The target which was the source of this drop.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The entity which caused this drop.
-	 * @throws DropCreateException If you try to use a wildcard target or agent.
-	 */
-	public OccurredEvent(Target targ, Action action, Entity agent) throws DropCreateException {
-		super(targ, action, true);
-		event = null;
-		setLocationWorldBiomeLight(targ);
-		setTool(agent);
-		setRegions();
-	}
-	/**
-	 * Create a cancellable drop with an arbitrary target.
-	 * @param targ The target which was the source of this drop.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The agent which caused this drop.
-	 * @param evt An interface through which the default behaviour of this drop may be cancelled.
-	 * @throws DropCreateException If you try to use a wildcard target or agent.
-	 */
-	public OccurredEvent(Target targ, Action action, Agent agent, Cancellable evt) throws DropCreateException {
-		this(targ, action, agent);
-		event = evt;
-	}
-	/**
-	 * Create a cancellable drop with an arbitrary target and an entity agent.
-	 * @param targ The target which was the source of this drop.
-	 * @param action The action that led to this drop (usually your custom action).
-	 * @param agent The entity which caused this drop.
-	 * @param evt An interface through which the default behaviour of this drop may be cancelled.
-	 * @throws DropCreateException If you try to use a wildcard target or agent.
-	 */
-	public OccurredEvent(Target targ, Action action, Entity agent, Cancellable evt) throws DropCreateException {
-		this(targ, action, agent);
-		event = evt;
-	}
-	
-	public OccurredEvent(PlayerFishEvent evt) {
-		super(new PlayerSubject(evt.getPlayer()),Action.FISH_CAUGHT);
-		event = evt;
-		setLocationWorldBiomeLight(evt.getCaught().getLocation().getBlock());
-		setWeatherTimeHeight();
-		setTool(evt.getPlayer());
-		setRegions();		
-	}
-	// Yes, this needs to be a separate constructor as the "super" has to be on the first line and includes the action
-	public OccurredEvent(PlayerFishEvent evt, String string) {
-		super(new PlayerSubject(evt.getPlayer()),Action.FISH_FAILED);
-		event = evt;
-		setLocationWorldBiomeLight(evt.getPlayer().getLocation().getBlock());
-		setWeatherTimeHeight();
-		setTool(evt.getPlayer());
-		setRegions();
-	}
-	
-	public OccurredEvent(CreatureSpawnEvent evt) {
-		super(getEntityTarget(evt.getEntity()),Action.MOB_SPAWN);
-		event = evt;
-		Entity e = evt.getEntity();
-		setLocationWorldBiomeLight(e);
-		setWeatherTimeHeight();
-		setRegions();
-	}
+            @Override
+            public boolean isCancelled() {
+                return evt.getDrops().isEmpty();
+            }
 
-	public OccurredEvent(BlockRedstoneEvent evt, Block block) {
-		super(new BlockTarget(block),Action.POWER_DOWN);
-		gatherPowerEventInfo(evt, block);
-	}
+            @Override
+            public void setCancelled(boolean cancel) {
+                // no need to do anything in here as we deal with clearing drops at the end of OtherDrops.performDrops()
+            }
+        };
+        Entity e = evt.getEntity();
+        setLocationWorldBiomeLight(e);
+        setWeatherTimeHeight();
+        setTool(evt.getEntity().getLastDamageCause());
+        if (tool == null) {
+            Log.logWarning("EntityDeathEvent: tool is null, this shouldn't happen! Entity:" + e.toString() + " lastDamage: " + e.getLastDamageCause().getCause().toString(), Verbosity.NORMAL);
+            return;
+        }
+        attackRange = measureRange(location, tool.getLocation(), "Entity '" + e.toString() + "' killed by '" + tool.toString() + "'");
+        setRegions();
+    }
 
-	/**
-	 * @param evt
-	 */
-	private void gatherPowerEventInfo(BlockRedstoneEvent evt, Block block) {
-		setRealEvent(evt);
-		event = new Cancellable() {
-			// Storing as an array is a crude way to get a copy
-			private Boolean cancelled = false;
-			@Override
-			public boolean isCancelled() {
-				return cancelled;
-			}
-			@Override
-			public void setCancelled(boolean cancel) {
-				this.cancelled = cancel;
-			}
-		};
-		setLocationWorldBiomeLight(block);
-		setWeatherTimeHeight();
-		setRegions();
-	}
+    public OccurredEvent(EntityDamageEvent evt) {
+        super(getEntityTarget(evt.getEntity()), Action.LEFT_CLICK);
+        event = evt;
+        Entity e = evt.getEntity();
+        setLocationWorldBiomeLight(e);
+        setWeatherTimeHeight();
+        if (evt instanceof EntityDamageByEntityEvent) {
+            EntityDamageByEntityEvent evt2 = (EntityDamageByEntityEvent) evt;
+            setTool(evt2.getDamager());
+            if (tool != null) {
+                attackRange = measureRange(location, evt2.getDamager().getLocation(), "Entity '" + e.toString() + "' damaged by '" + tool.toString() + "'");
+            }
+        } else {
+            setTool(evt.getCause());
+        }
+        setRegions();
+    }
 
-	public OccurredEvent(BlockRedstoneEvent evt, Block block, String string) {
-		super(new BlockTarget(block),Action.POWER_UP);
-		gatherPowerEventInfo(evt, block);
-	}
+    public OccurredEvent(EntityDamageEvent evt, String string) {
+        super(getEntityTarget(evt.getEntity()), Action.HIT);
+        event = evt;
+        Entity e = evt.getEntity();
+        setLocationWorldBiomeLight(e);
+        setWeatherTimeHeight();
+        if (evt instanceof EntityDamageByEntityEvent) {
+            EntityDamageByEntityEvent evt2 = (EntityDamageByEntityEvent) evt;
+            setTool(evt2.getDamager());
+            if (evt2.getDamager() == null) {
+                Log.logInfo("EntityDamageEvent: damager is null, please inform developer.");
+            } else if (e == null) {
+                Log.logInfo("EntityDamageEvent: entity is null, please inform developer.");
+            } else if (tool == null) {
+                if (!(e instanceof TNTPrimed)) {
+                    Log.logInfo("EntityDamageEvent: tool is null, please inform developer if this wasn't due to TNT (or TNT minecart).", Verbosity.HIGH);
+                }
+            } else {
+                Log.logInfo("Damager: " + evt2.getDamager().toString(), Verbosity.HIGH);
+                attackRange = measureRange(location, evt2.getDamager().getLocation(), "Entity '" + e.toString() + "' damaged by '" + tool.toString() + "'");
+            }
+        } else {
+            setTool(evt.getCause());
+        }
+        setRegions();
+    }
 
-	public OccurredEvent(PlayerJoinEvent evt) {
-		super(new PlayerSubject(evt.getPlayer().getDisplayName()),Action.PLAYER_JOIN);
-		setRealEvent(evt);
-		event = new Cancellable() {
-			// Storing as an array is a crude way to get a copy
-			private Boolean cancelled = false;
-			@Override
-			public boolean isCancelled() {
-				return cancelled;
-			}
-			@Override
-			public void setCancelled(boolean cancel) {
-				this.cancelled = cancel;
-			}
-		};
-		
-		setLocationWorldBiomeLight(evt.getPlayer().getLocation().getBlock());
-		setWeatherTimeHeight();
-		setTool(evt.getPlayer());
-		setRegions();
+    public OccurredEvent(PaintingBreakEvent evt) {
+        super(new VehicleTarget(evt.getPainting()), Action.BREAK);
+        event = evt;
+        Painting canvas = evt.getPainting();
+        setLocationWorldBiomeLight(canvas);
+        setWeatherTimeHeight();
+        if (evt instanceof PaintingBreakByEntityEvent) {
+            PaintingBreakByEntityEvent evt2 = (PaintingBreakByEntityEvent) evt;
+            Entity remover = evt2.getRemover();
+            setTool(remover);
+            attackRange = measureRange(location, remover.getLocation(), "Painting broken by '" + tool.toString() + "'");
+        } else {
+            switch (evt.getCause()) {
+                case ENTITY:
+                    setTool(DamageCause.ENTITY_ATTACK);
+                    break;
+                case FIRE:
+                    setTool(DamageCause.FIRE_TICK);
+                    break;
+                case OBSTRUCTION:
+                    setTool(DamageCause.SUFFOCATION);
+                    break;
+                case PHYSICS:
+                    setTool(DamageCause.CONTACT);
+                    break;
+                case WATER:
+                    setTool(DamageCause.DROWNING);
+                    break;
+            }
+        }
+        setRegions();
+    }
 
-	}
+    public OccurredEvent(LeavesDecayEvent evt) {
+        super(new BlockTarget(evt.getBlock()), Action.LEAF_DECAY);
+        event = evt;
+        setLocationWorldBiomeLight(evt.getBlock());
+        setWeatherTimeHeight();
+        tool = null;
+        setRegions();
+    }
 
-	public OccurredEvent(PlayerRespawnEvent evt) {
-		super(new PlayerSubject(evt.getPlayer().getDisplayName()),Action.PLAYER_RESPAWN);
-		setRealEvent(evt);
-		event = new Cancellable() {
-			// Storing as an array is a crude way to get a copy
-			private Boolean cancelled = false;
-			@Override
-			public boolean isCancelled() {
-				return cancelled;
-			}
-			@Override
-			public void setCancelled(boolean cancel) {
-				this.cancelled = cancel;
-			}
-		};
-		
-		setLocationWorldBiomeLight(evt.getPlayer().getLocation().getBlock());
-		setWeatherTimeHeight();
-		setTool(evt.getPlayer());
-		setRegions();
-	}
+    public OccurredEvent(VehicleDestroyEvent evt) {
+        super(new VehicleTarget(evt.getVehicle()), Action.BREAK);
+        event = evt;
+        setLocationWorldBiomeLight(evt.getVehicle());
+        setWeatherTimeHeight();
+        setTool(evt.getAttacker()); // Note: getAttacker is NULL for environmental attack/break
+        // environmental attacks (eg. burning) do not have a location, so range is not valid.
+        if (evt.getAttacker() instanceof Player) {
+            attackRange = measureRange(location, evt.getAttacker().getLocation(), "Vehicle '" + evt.getVehicle().getType().toString() + "' destroyed by '" + tool.toString() + "'");
+        } else {
+            attackRange = 0;
+        }
 
-	// Constructor helpers
-	private void setWeatherTimeHeight() {
-		weather = Weather.match(biome, world.hasStorm(), world.isThundering());
-		time = world.getTime();
-		height = location.getBlockY();
-	}
-	private void setLocationWorldBiomeLight(Block block) {
-		location = block.getLocation();
-		world = block.getWorld();
-		biome = block.getBiome();
-		if (block.getType().isTransparent()) {
-			lightLevel = block.getLightLevel();
-		} else { // look for an air block around
-			byte maxLight = 0;
-			for (BlockFace face : BlockFace.values()) {
-				if (block.getRelative(face).getType().isTransparent()) {
-					byte currentLevel = block.getRelative(face).getLightLevel();
-					if (currentLevel > maxLight) maxLight = currentLevel;
-				}
-			}
-			lightLevel = maxLight;
-		}
-	}
-	private void setLocationWorldBiomeLight(Entity e) {
-		location = e.getLocation();
-		world = e.getWorld();
-		biome = world.getBiome(location.getBlockX(), location.getBlockZ());
-		lightLevel = world.getBlockAt(location).getLightLevel();
-	}
-	private void setLocationWorldBiomeLight(Target targ) {
-		location = targ.getLocation();
-		world = location.getWorld();
-		biome = world.getBiome(location.getBlockX(), location.getBlockZ());
-		lightLevel = world.getBlockAt(location).getLightLevel();
-	}
-	private void setRegions() {
-		regions = new HashSet<String>();
-		if(!Dependencies.hasWorldGuard()) return;
-		Map<String, ProtectedRegion> regionMap = Dependencies.getWorldGuard().getGlobalRegionManager().get(world).getRegions();
-		Vector vec = new Vector(location.getX(), location.getY(), location.getZ());
-		for(String region : regionMap.keySet()) {
-			if(regionMap.get(region).contains(vec))
-				regions.add(region.toLowerCase()); // note: region needs to be lowercase for case insensitive matches
-		}
-	}
-	private void setTool(DamageCause cause) {
-		tool = new EnvironmentAgent(cause);
-	}
-	private void setTool(Agent agent) throws DropCreateException {
-		if(agent.getClass().isAnnotationPresent(ConfigOnly.class)) {
-			ConfigOnly annotate = agent.getClass().getAnnotation(ConfigOnly.class);
-			throw new DropCreateException(agent.getClass(), annotate.value());
-		}
-		tool = agent;
-	}
-	private void setTool(Entity damager) {
-		if(damager instanceof Player)
-			tool = new PlayerSubject((Player) damager);
-		else if(damager instanceof Projectile)
-			tool = new ProjectileAgent((Projectile) damager);
-		else if(damager instanceof LightningStrike)
-			// TODO: Is there any use in passing the lightning entity through here?
-			tool = new EnvironmentAgent(DamageCause.LIGHTNING);
-		else if(damager instanceof LivingEntity)
-			tool = new CreatureSubject(damager);
-		else if(damager instanceof Explosive)
-			tool = new ExplosionAgent(damager);
-	}
-	private void setTool(EntityDamageEvent lastDamage) {
-		// This is for EntityDeathEvent
-		// Check if the damager is a player - if so, weapon is the held tool
-		if(lastDamage instanceof EntityDamageByEntityEvent) {
-			EntityDamageByEntityEvent e = (EntityDamageByEntityEvent) lastDamage;
-			if(e.getDamager() instanceof Player) {
-				tool = new PlayerSubject((Player) e.getDamager());
-				return;
-			} else if (e.getDamager() instanceof Projectile) {
-				tool = new ProjectileAgent((Projectile) e.getDamager()); 
-				return;
-			} else if(e.getDamager() instanceof LivingEntity) {
-				tool = new CreatureSubject(e.getDamager());
-				return;
-			} else {
-				// The only other one I can think of is lightning, which would be covered by the non-entity code
-				// But just in case, log it.
-				Log.logInfo("A " + lastDamage.getEntity().getClass().getSimpleName() + " was damaged by a "
-						+ e.getDamager().getClass().getSimpleName(), HIGHEST);
-			}
-		}
-		// Damager was not a person - check damage types
-		DamageCause cause = lastDamage.getCause();
-		//if(cause == DamageCause.CUSTOM) return; // We don't handle custom damage // Zar: actually, probably preferable to actually handle custom
-		// Used to ignore void damage as well, but since events were added I can see some use for it.
-		// For example, a lightning strike when someone falls off the bottom of the map.
-		tool = new EnvironmentAgent(cause);
-	}
-	private static Target getEntityTarget(Entity what) {
-		if(what instanceof Player) return new PlayerSubject((Player) what);
-		else if(what instanceof LivingEntity) return new CreatureSubject(what);
-		else if(what instanceof Vehicle) return new VehicleTarget((Vehicle) what);
-		else if(what instanceof Painting) return new VehicleTarget((Painting) what);
-		else if(what instanceof FallingSand) return new BlockTarget((FallingSand) what);
-		else if(what instanceof Fireball) return null; // TODO: do we need to do anything here? This is a fireball dying, getting hurt or being interacted with?
-		else if(what instanceof EnderDragonPart) return new CreatureSubject(((ComplexEntityPart)what).getParent());
-		else return new CreatureSubject(what);
-		/*
-		else if(what instanceof EnderCrystal) return null; // TODO: allow ender crystal targets (change creaturesubject to entitysubject?)
-		else if(what instanceof ItemFrame) return null;
-		else if(what instanceof TNTPrimed) return null;
-		else if(what instanceof Arrow) return null;
-		else if(what instanceof Item) return null;*/
-	//	Log.logWarning("Error: unknown entity target ("+what.getClass().toString()+") - please let the developer know.", Verbosity.HIGH);
-		//return null; // Ideally this return is unreachable
-	}
-	
-	// Accessors
-	/**
-	 * @return The agent that caused this event.
-	 */
-	public Agent getTool() {
-		return tool;
-	}
-	/**
-	 * @return The location at which the event occurred.
-	 */
-	public Location getLocation() {
-		return location;
-	}
-	public void setLocation(Location newLocation) {
-		location = newLocation;
-	}
-	/**
-	 * @return The world in which the event occurred.
-	 */
-	public World getWorld() {
-		return world;
-	}
-	/**
-	 * @return The set of WorldGuard regions that contain the location of the event.
-	 */
-	public Set<String> getRegions() {
-		return regions;
-	}
-	/**
-	 * @return The weather conditions at the time of the event.
-	 */
-	public Weather getWeather() {
-		return weather;
-	}
-	/**
-	 * @return The block face that was hit, if applicable, or null otherwise.
-	 */
-	public BlockFace getFace() {
-		return face;
-	}
-	/**
-	 * @return The biome in which the event occurred.
-	 */
-	public Biome getBiome() {
-		return biome;
-	}
-	/**
-	 * @return The (in-game) time of day at which the event occurred.
-	 */
-	public long getTime() {
-		return time;
-	}
-	/**
-	 * @return The height above bedrock at which the event occurred.
-	 */
-	public int getHeight() {
-		return height;
-	}
-	/**
-	 * @return The distance the agent was from the target at the time of the event.
-	 */
-	public double getAttackRange() {
-		return attackRange;
-	}
-	/**
-	 * @return The light level at the location of the event when it occurred.
-	 */
-	public int getLightLevel() {
-		return lightLevel;
-	}
-	
-	// Matching!
-	@Override
-	public boolean matches(AbstractDropEvent other) {
-		if(other instanceof OccurredEvent) {
-			return equals(other);
-		} else if(other instanceof CustomDrop || other instanceof GroupDropEvent) {
-			return other.matches(this);
-		}
-		return false;
-	}
-	
-	@Override
-	public String getLogMessage() {
-		// TODO: Hm, how should this log message go? It would be used if you were logging actual event firing
-		return getAction().toString() + " on " + 
-			((getTarget() == null) ? "<no block>" : getTarget().toString() + " with " + 
-			((getTool() == null) ? "<no tool> " : getTool().toString()));
-	}
-	
-	@Override
-	public boolean isCancelled() {
-		if(event != null) return event.isCancelled();
-		return false;
-	}
-	
-	@Override
-	public void setCancelled(boolean cancel) {
-		if(event != null) event.setCancelled(cancel);
-	}
-	
-	public Cancellable getEvent() {
-		return this.event;
-	}
-	
-	private static double measureRange(Location fromLoc, Location toLoc, String onError) {
-		if (toLoc == null) return 0;
-		if (fromLoc == null) {
-			Log.logWarning("OccuredEvent.measureRange: location is null, this should never happen! (please advise developer)." + onError, Verbosity.NORMAL);
-			return 0;
-		}
-		if (fromLoc.getWorld() != toLoc.getWorld()) {
-			Log.logWarning("OccuredEvent.measureRange: worlds ("+fromLoc.getWorld().toString()+", "+toLoc.getWorld().toString()+") do not match - perhaps another plugin intervened." + onError, Verbosity.HIGH);
-		} else {
-			return fromLoc.distance(toLoc);
-		}
-		return 0;
-	}
+        setRegions();
+    }
 
-	public void setRealEvent(Event realEvent) {
-		this.realEvent = realEvent;
-	}
+    public OccurredEvent(PlayerInteractEvent evt) {
+        super(new BlockTarget(evt.getClickedBlock()), Action.fromInteract(evt.getAction()));
+        event = evt;
+        setLocationWorldBiomeLight(evt.getClickedBlock());
+        face = evt.getBlockFace();
+        setWeatherTimeHeight();
+        attackRange = measureRange(location, evt.getPlayer().getLocation(), "Player '" + evt.getPlayer().getName() + "' interacted with " + evt.getClickedBlock().toString());
+        setTool(evt.getPlayer());
+        setRegions();
+    }
 
-	public Event getRealEvent() {
-		return realEvent;
-	}
+    public OccurredEvent(PlayerInteractEntityEvent evt) {
+        super(getEntityTarget(evt.getRightClicked()), Action.RIGHT_CLICK);
+        event = evt;
+        setLocationWorldBiomeLight(evt.getRightClicked());
+        setWeatherTimeHeight();
+        attackRange = measureRange(location, evt.getPlayer().getLocation(), "Player '" + evt.getPlayer().getName() + "' interacted with " + evt.getRightClicked().toString());
+        setTool(evt.getPlayer());
+        setRegions();
+    }
 
-	public void setDenied(boolean denied) {
-		this.denied = denied;
-	}
+    public OccurredEvent(BlockFromToEvent evt) {
+        super(new BlockTarget(evt.getToBlock()), Action.BREAK);
+        event = evt;
+        setLocationWorldBiomeLight(evt.getToBlock());
+        setWeatherTimeHeight();
+        tool = new EnvironmentAgent(DamageCause.CUSTOM);
+        setRegions();
+    }
 
-	public boolean isDenied() {
-		return denied;
-	}
+    public OccurredEvent(EntityExplodeEvent evt, Block block) {
+        super(new BlockTarget(block), Action.BREAK);
+        event = evt;
+        setLocationWorldBiomeLight(block);
+        setWeatherTimeHeight();
+        tool = new ExplosionAgent(evt.getEntity());
+        setRegions();
+    }
+    // Generic constructors
 
-	public void setCustomDropAmount(double amount) {
-		customDropAmount = amount;
-	}
-	
-	public double getCustomDropAmount() {
-		return customDropAmount;
-	}
+    /**
+     * Create a drop with a block as its target.
+     *
+     * @param block The block.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The agent which caused this drop.
+     * @throws DropCreateException If you try to use a wildcard target or agent.
+     */
+    public OccurredEvent(Block block, Action action, Agent agent) throws DropCreateException {
+        super(new BlockTarget(block), action);
+        event = null;
+        setLocationWorldBiomeLight(block);
+        setWeatherTimeHeight();
+        setTool(agent);
+        setRegions();
+    }
 
-	public Player getPlayerAttacker() {
-		if (getTool() instanceof PlayerSubject)
-			return ((PlayerSubject)getTool()).getPlayer();
-		else if (getTool() instanceof ProjectileAgent) {
-			if (((ProjectileAgent)getTool()).getShooter() instanceof PlayerSubject)
-				return (Player)((ProjectileAgent)getTool()).getShooter().getEntity();
-		}
-		
-		return null;
-	}
+    /**
+     * Create a drop with a block as its target and an entity agent.
+     *
+     * @param block The block.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The agent which caused this drop.
+     */
+    public OccurredEvent(Block block, Action action, Entity agent) {
+        super(new BlockTarget(block), action);
+        event = null;
+        setLocationWorldBiomeLight(block);
+        setWeatherTimeHeight();
+        setTool(agent);
+        setRegions();
+    }
 
-	public LivingEntity getAttacker() {
-		if (getTool() instanceof PlayerSubject)
-			return ((PlayerSubject)getTool()).getPlayer();
-		else if (getTool() instanceof CreatureSubject) {
-			Entity ent = ((CreatureSubject)getTool()).getEntity();
-			if (ent instanceof LivingEntity) return (LivingEntity)ent;
-		} else if (getTool() instanceof ProjectileAgent) {
-			if (((ProjectileAgent)getTool()).getShooter().getEntity() instanceof LivingEntity) {
-				return (LivingEntity)((ProjectileAgent)getTool()).getShooter().getEntity();
-			}
-		}
-		return null;
-	}
+    /**
+     * Create a cancellable drop with a block as its target.
+     *
+     * @param block The block.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The agent which caused this drop.
+     * @param evt An interface through which the default behaviour of this drop
+     * may be cancelled.
+     * @throws DropCreateException If you try to use a wildcard target or agent.
+     */
+    public OccurredEvent(Block block, Action action, Agent agent, Cancellable evt) throws DropCreateException {
+        this(block, action, agent);
+        event = evt;
+    }
 
-	public Player getPlayerVictim() {
-		if (getTarget() instanceof PlayerSubject)
-			return ((PlayerSubject)getTarget()).getPlayer();
-		else
-			return null;
-	}
+    /**
+     * Create a cancellable drop with a block as its target and an entity agent.
+     *
+     * @param block The block.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The agent which caused this drop.
+     * @param evt An interface through which the default behaviour of this drop
+     * may be cancelled.
+     */
+    public OccurredEvent(Block block, Action action, Entity agent, Cancellable evt) {
+        this(block, action, agent);
+        event = evt;
+    }
 
-	public boolean isOverrideDefault() {
-		return overrideDefault;
-	}
+    /**
+     * Create a drop with an entity as its target.
+     *
+     * @param entity The entity.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The agent which caused this drop.
+     * @throws DropCreateException If you try to use a wildcard target or agent.
+     */
+    public OccurredEvent(Entity entity, Action action, Agent agent) throws DropCreateException {
+        super(getEntityTarget(entity), action);
+        event = null;
+        setLocationWorldBiomeLight(entity);
+        setTool(agent);
+        setRegions();
+    }
 
-	public void setOverrideDefault(boolean overrideDefault) {
-		this.overrideDefault = overrideDefault;
-	}
+    /**
+     * Create a drop with an entity as its target and an entity agent.
+     *
+     * @param entity The entity.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The entity which caused this drop.
+     */
+    public OccurredEvent(Entity entity, Action action, Entity agent) {
+        super(getEntityTarget(entity), action);
+        event = null;
+        setLocationWorldBiomeLight(entity);
+        setTool(agent);
+        setRegions();
+    }
 
-	public boolean isOverrideDefaultXp() {
-		return overrideDefaultXp;
-	}
+    /**
+     * Create a cancellable drop with an entity as its target.
+     *
+     * @param entity The entity.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The agent which caused this drop.
+     * @param evt An interface through which the default behaviour of this drop
+     * may be cancelled.
+     * @throws DropCreateException If you try to use a wildcard target or agent.
+     */
+    public OccurredEvent(Entity entity, Action action, Agent agent, Cancellable evt) throws DropCreateException {
+        this(entity, action, agent);
+        event = evt;
+    }
 
-	public void setOverrideDefaultXp(boolean overrideDefaultXp) {
-		this.overrideDefaultXp = overrideDefaultXp;
-	}
+    /**
+     * Create a cancellable drop with an entity as its target and an entity
+     * agent.
+     *
+     * @param entity The entity.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The entity which caused this drop.
+     * @param evt An interface through which the default behaviour of this drop
+     * may be cancelled.
+     */
+    public OccurredEvent(Entity entity, Action action, Entity agent, Cancellable evt) {
+        this(entity, action, agent);
+        event = evt;
+    }
 
-	public void setReplaceBlockWith(BlockTarget tempReplace) {
-		replaceBlockWith = tempReplace;
-		
-	}
+    /**
+     * Create a drop with an arbitrary target.
+     *
+     * @param targ The target which was the source of this drop.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The agent which caused this drop.
+     * @throws DropCreateException If you try to use a wildcard target or agent.
+     */
+    public OccurredEvent(Target targ, Action action, Agent agent) throws DropCreateException {
+        super(targ, action, true);
+        event = null;
+        setLocationWorldBiomeLight(targ);
+        setTool(agent);
+        setRegions();
+    }
 
-	public BlockTarget getReplaceBlockWith() {
-		return replaceBlockWith;
-		
-	}
+    /**
+     * Create a drop with an arbitrary target and an entity agent.
+     *
+     * @param targ The target which was the source of this drop.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The entity which caused this drop.
+     * @throws DropCreateException If you try to use a wildcard target or agent.
+     */
+    public OccurredEvent(Target targ, Action action, Entity agent) throws DropCreateException {
+        super(targ, action, true);
+        event = null;
+        setLocationWorldBiomeLight(targ);
+        setTool(agent);
+        setRegions();
+    }
 
-	public boolean isOverrideEquipment() {
-		return this.overrideEquipment;
-	}
+    /**
+     * Create a cancellable drop with an arbitrary target.
+     *
+     * @param targ The target which was the source of this drop.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The agent which caused this drop.
+     * @param evt An interface through which the default behaviour of this drop
+     * may be cancelled.
+     * @throws DropCreateException If you try to use a wildcard target or agent.
+     */
+    public OccurredEvent(Target targ, Action action, Agent agent, Cancellable evt) throws DropCreateException {
+        this(targ, action, agent);
+        event = evt;
+    }
 
-	public void setOverrideEquipment(boolean equip) {
-		this.overrideEquipment = equip;
-	}
+    /**
+     * Create a cancellable drop with an arbitrary target and an entity agent.
+     *
+     * @param targ The target which was the source of this drop.
+     * @param action The action that led to this drop (usually your custom
+     * action).
+     * @param agent The entity which caused this drop.
+     * @param evt An interface through which the default behaviour of this drop
+     * may be cancelled.
+     * @throws DropCreateException If you try to use a wildcard target or agent.
+     */
+    public OccurredEvent(Target targ, Action action, Entity agent, Cancellable evt) throws DropCreateException {
+        this(targ, action, agent);
+        event = evt;
+    }
 
+    public OccurredEvent(PlayerFishEvent evt) {
+        super(new PlayerSubject(evt.getPlayer()), Action.FISH_CAUGHT);
+        event = evt;
+        setLocationWorldBiomeLight(evt.getCaught().getLocation().getBlock());
+        setWeatherTimeHeight();
+        setTool(evt.getPlayer());
+        setRegions();
+    }
+    // Yes, this needs to be a separate constructor as the "super" has to be on the first line and includes the action
 
+    public OccurredEvent(PlayerFishEvent evt, String string) {
+        super(new PlayerSubject(evt.getPlayer()), Action.FISH_FAILED);
+        event = evt;
+        setLocationWorldBiomeLight(evt.getPlayer().getLocation().getBlock());
+        setWeatherTimeHeight();
+        setTool(evt.getPlayer());
+        setRegions();
+    }
+
+    public OccurredEvent(CreatureSpawnEvent evt) {
+        super(getEntityTarget(evt.getEntity()), Action.MOB_SPAWN);
+        event = evt;
+        Entity e = evt.getEntity();
+        setLocationWorldBiomeLight(e);
+        setWeatherTimeHeight();
+        setRegions();
+    }
+
+    public OccurredEvent(BlockRedstoneEvent evt, Block block) {
+        super(new BlockTarget(block), Action.POWER_DOWN);
+        gatherPowerEventInfo(evt, block);
+    }
+
+    /**
+     * @param evt
+     */
+    private void gatherPowerEventInfo(BlockRedstoneEvent evt, Block block) {
+        setRealEvent(evt);
+        event = new Cancellable() {
+            // Storing as an array is a crude way to get a copy
+            private Boolean cancelled = false;
+
+            @Override
+            public boolean isCancelled() {
+                return cancelled;
+            }
+
+            @Override
+            public void setCancelled(boolean cancel) {
+                this.cancelled = cancel;
+            }
+        };
+        setLocationWorldBiomeLight(block);
+        setWeatherTimeHeight();
+        setRegions();
+    }
+
+    public OccurredEvent(BlockRedstoneEvent evt, Block block, String string) {
+        super(new BlockTarget(block), Action.POWER_UP);
+        gatherPowerEventInfo(evt, block);
+    }
+
+    public OccurredEvent(PlayerJoinEvent evt) {
+        super(new PlayerSubject(evt.getPlayer().getDisplayName()), Action.PLAYER_JOIN);
+        setRealEvent(evt);
+        event = new Cancellable() {
+            // Storing as an array is a crude way to get a copy
+            private Boolean cancelled = false;
+
+            @Override
+            public boolean isCancelled() {
+                return cancelled;
+            }
+
+            @Override
+            public void setCancelled(boolean cancel) {
+                this.cancelled = cancel;
+            }
+        };
+
+        setLocationWorldBiomeLight(evt.getPlayer().getLocation().getBlock());
+        setWeatherTimeHeight();
+        setTool(evt.getPlayer());
+        setRegions();
+
+    }
+
+    public OccurredEvent(PlayerRespawnEvent evt) {
+        super(new PlayerSubject(evt.getPlayer().getDisplayName()), Action.PLAYER_RESPAWN);
+        setRealEvent(evt);
+        event = new Cancellable() {
+            // Storing as an array is a crude way to get a copy
+            private Boolean cancelled = false;
+
+            @Override
+            public boolean isCancelled() {
+                return cancelled;
+            }
+
+            @Override
+            public void setCancelled(boolean cancel) {
+                this.cancelled = cancel;
+            }
+        };
+
+        setLocationWorldBiomeLight(evt.getPlayer().getLocation().getBlock());
+        setWeatherTimeHeight();
+        setTool(evt.getPlayer());
+        setRegions();
+    }
+
+    // Constructor helpers
+    private void setWeatherTimeHeight() {
+        weather = Weather.match(biome, world.hasStorm(), world.isThundering());
+        time = world.getTime();
+        height = location.getBlockY();
+    }
+
+    private void setLocationWorldBiomeLight(Block block) {
+        location = block.getLocation();
+        world = block.getWorld();
+        biome = block.getBiome();
+        if (block.getType().isTransparent()) {
+            lightLevel = block.getLightLevel();
+        } else { // look for an air block around
+            byte maxLight = 0;
+            for (BlockFace face : BlockFace.values()) {
+                if (block.getRelative(face).getType().isTransparent()) {
+                    byte currentLevel = block.getRelative(face).getLightLevel();
+                    if (currentLevel > maxLight) {
+                        maxLight = currentLevel;
+                    }
+                }
+            }
+            lightLevel = maxLight;
+        }
+    }
+
+    private void setLocationWorldBiomeLight(Entity e) {
+        location = e.getLocation();
+        world = e.getWorld();
+        biome = world.getBiome(location.getBlockX(), location.getBlockZ());
+        lightLevel = world.getBlockAt(location).getLightLevel();
+    }
+
+    private void setLocationWorldBiomeLight(Target targ) {
+        location = targ.getLocation();
+        world = location.getWorld();
+        biome = world.getBiome(location.getBlockX(), location.getBlockZ());
+        lightLevel = world.getBlockAt(location).getLightLevel();
+    }
+
+    private void setRegions() {
+        regions = new HashSet<String>();
+        if (!Dependencies.hasWorldGuard()) {
+            return;
+        }
+        Map<String, ProtectedRegion> regionMap = Dependencies.getWorldGuard().getGlobalRegionManager().get(world).getRegions();
+        Vector vec = new Vector(location.getX(), location.getY(), location.getZ());
+        for (String region : regionMap.keySet()) {
+            if (regionMap.get(region).contains(vec)) {
+                regions.add(region.toLowerCase()); // note: region needs to be lowercase for case insensitive matches
+            }
+        }
+    }
+
+    private void setTool(DamageCause cause) {
+        tool = new EnvironmentAgent(cause);
+    }
+
+    private void setTool(Agent agent) throws DropCreateException {
+        if (agent.getClass().isAnnotationPresent(ConfigOnly.class)) {
+            ConfigOnly annotate = agent.getClass().getAnnotation(ConfigOnly.class);
+            throw new DropCreateException(agent.getClass(), annotate.value());
+        }
+        tool = agent;
+    }
+
+    private void setTool(Entity damager) {
+        if (damager instanceof Player) {
+            tool = new PlayerSubject((Player) damager);
+        } else if (damager instanceof Projectile) {
+            tool = new ProjectileAgent((Projectile) damager);
+        } else if (damager instanceof LightningStrike) // TODO: Is there any use in passing the lightning entity through here?
+        {
+            tool = new EnvironmentAgent(DamageCause.LIGHTNING);
+        } else if (damager instanceof LivingEntity) {
+            tool = new CreatureSubject(damager);
+        } else if (damager instanceof Explosive) {
+            tool = new ExplosionAgent(damager);
+        }
+    }
+
+    private void setTool(EntityDamageEvent lastDamage) {
+        // This is for EntityDeathEvent
+        // Check if the damager is a player - if so, weapon is the held tool
+        if (lastDamage instanceof EntityDamageByEntityEvent) {
+            EntityDamageByEntityEvent e = (EntityDamageByEntityEvent) lastDamage;
+            if (e.getDamager() instanceof Player) {
+                tool = new PlayerSubject((Player) e.getDamager());
+                return;
+            } else if (e.getDamager() instanceof Projectile) {
+                tool = new ProjectileAgent((Projectile) e.getDamager());
+                return;
+            } else if (e.getDamager() instanceof LivingEntity) {
+                tool = new CreatureSubject(e.getDamager());
+                return;
+            } else {
+                // The only other one I can think of is lightning, which would be covered by the non-entity code
+                // But just in case, log it.
+                Log.logInfo("A " + lastDamage.getEntity().getClass().getSimpleName() + " was damaged by a "
+                        + e.getDamager().getClass().getSimpleName(), HIGHEST);
+            }
+        }
+        // Damager was not a person - check damage types
+        DamageCause cause = lastDamage.getCause();
+        //if(cause == DamageCause.CUSTOM) return; // We don't handle custom damage // Zar: actually, probably preferable to actually handle custom
+        // Used to ignore void damage as well, but since events were added I can see some use for it.
+        // For example, a lightning strike when someone falls off the bottom of the map.
+        tool = new EnvironmentAgent(cause);
+    }
+
+    private static Target getEntityTarget(Entity what) {
+        if (what instanceof Player) {
+            return new PlayerSubject((Player) what);
+        } else if (what instanceof LivingEntity) {
+            return new CreatureSubject(what);
+        } else if (what instanceof Vehicle) {
+            return new VehicleTarget((Vehicle) what);
+        } else if (what instanceof Painting) {
+            return new VehicleTarget((Painting) what);
+        } else if (what instanceof FallingSand) {
+            return new BlockTarget((FallingSand) what);
+        } else if (what instanceof Fireball) {
+            return null; // TODO: do we need to do anything here? This is a fireball dying, getting hurt or being interacted with?
+        } else if (what instanceof EnderDragonPart) {
+            return new CreatureSubject(((ComplexEntityPart) what).getParent());
+        } else {
+            return new CreatureSubject(what);
+        }
+        /*
+         else if(what instanceof EnderCrystal) return null; // TODO: allow ender crystal targets (change creaturesubject to entitysubject?)
+         else if(what instanceof ItemFrame) return null;
+         else if(what instanceof TNTPrimed) return null;
+         else if(what instanceof Arrow) return null;
+         else if(what instanceof Item) return null;*/
+        //	Log.logWarning("Error: unknown entity target ("+what.getClass().toString()+") - please let the developer know.", Verbosity.HIGH);
+        //return null; // Ideally this return is unreachable
+    }
+
+    // Accessors
+    /**
+     * @return The agent that caused this event.
+     */
+    public Agent getTool() {
+        return tool;
+    }
+
+    /**
+     * @return The location at which the event occurred.
+     */
+    public Location getLocation() {
+        return location;
+    }
+
+    public void setLocation(Location newLocation) {
+        location = newLocation;
+    }
+
+    /**
+     * @return The world in which the event occurred.
+     */
+    public World getWorld() {
+        return world;
+    }
+
+    /**
+     * @return The set of WorldGuard regions that contain the location of the
+     * event.
+     */
+    public Set<String> getRegions() {
+        return regions;
+    }
+
+    /**
+     * @return The weather conditions at the time of the event.
+     */
+    public Weather getWeather() {
+        return weather;
+    }
+
+    /**
+     * @return The block face that was hit, if applicable, or null otherwise.
+     */
+    public BlockFace getFace() {
+        return face;
+    }
+
+    /**
+     * @return The biome in which the event occurred.
+     */
+    public Biome getBiome() {
+        return biome;
+    }
+
+    /**
+     * @return The (in-game) time of day at which the event occurred.
+     */
+    public long getTime() {
+        return time;
+    }
+
+    /**
+     * @return The height above bedrock at which the event occurred.
+     */
+    public int getHeight() {
+        return height;
+    }
+
+    /**
+     * @return The distance the agent was from the target at the time of the
+     * event.
+     */
+    public double getAttackRange() {
+        return attackRange;
+    }
+
+    /**
+     * @return The light level at the location of the event when it occurred.
+     */
+    public int getLightLevel() {
+        return lightLevel;
+    }
+
+    // Matching!
+    @Override
+    public boolean matches(AbstractDropEvent other) {
+        if (other instanceof OccurredEvent) {
+            return equals(other);
+        } else if (other instanceof CustomDrop || other instanceof GroupDropEvent) {
+            return other.matches(this);
+        }
+        return false;
+    }
+
+    @Override
+    public String getLogMessage() {
+        // TODO: Hm, how should this log message go? It would be used if you were logging actual event firing
+        return getAction().toString() + " on "
+                + ((getTarget() == null) ? "<no block>" : getTarget().toString() + " with "
+                + ((getTool() == null) ? "<no tool> " : getTool().toString()));
+    }
+
+    @Override
+    public boolean isCancelled() {
+        if (event != null) {
+            return event.isCancelled();
+        }
+        return false;
+    }
+
+    @Override
+    public void setCancelled(boolean cancel) {
+        if (event != null) {
+            event.setCancelled(cancel);
+        }
+    }
+
+    public Cancellable getEvent() {
+        return this.event;
+    }
+
+    private static double measureRange(Location fromLoc, Location toLoc, String onError) {
+        if (toLoc == null) {
+            return 0;
+        }
+        if (fromLoc == null) {
+            Log.logWarning("OccuredEvent.measureRange: location is null, this should never happen! (please advise developer)." + onError, Verbosity.NORMAL);
+            return 0;
+        }
+        if (fromLoc.getWorld() != toLoc.getWorld()) {
+            Log.logWarning("OccuredEvent.measureRange: worlds (" + fromLoc.getWorld().toString() + ", " + toLoc.getWorld().toString() + ") do not match - perhaps another plugin intervened." + onError, Verbosity.HIGH);
+        } else {
+            return fromLoc.distance(toLoc);
+        }
+        return 0;
+    }
+
+    public void setRealEvent(Event realEvent) {
+        this.realEvent = realEvent;
+    }
+
+    public Event getRealEvent() {
+        return realEvent;
+    }
+
+    public void setDenied(boolean denied) {
+        this.denied = denied;
+    }
+
+    public boolean isDenied() {
+        return denied;
+    }
+
+    public void setCustomDropAmount(double amount) {
+        customDropAmount = amount;
+    }
+
+    public double getCustomDropAmount() {
+        return customDropAmount;
+    }
+
+    public Player getPlayerAttacker() {
+        if (getTool() instanceof PlayerSubject) {
+            return ((PlayerSubject) getTool()).getPlayer();
+        } else if (getTool() instanceof ProjectileAgent) {
+            if (((ProjectileAgent) getTool()).getShooter() instanceof PlayerSubject) {
+                return (Player) ((ProjectileAgent) getTool()).getShooter().getEntity();
+            }
+        }
+
+        return null;
+    }
+
+    public LivingEntity getAttacker() {
+        if (getTool() instanceof PlayerSubject) {
+            return ((PlayerSubject) getTool()).getPlayer();
+        } else if (getTool() instanceof CreatureSubject) {
+            Entity ent = ((CreatureSubject) getTool()).getEntity();
+            if (ent instanceof LivingEntity) {
+                return (LivingEntity) ent;
+            }
+        } else if (getTool() instanceof ProjectileAgent) {
+            if (((ProjectileAgent) getTool()).getShooter().getEntity() instanceof LivingEntity) {
+                return (LivingEntity) ((ProjectileAgent) getTool()).getShooter().getEntity();
+            }
+        }
+        return null;
+    }
+
+    public Player getPlayerVictim() {
+        if (getTarget() instanceof PlayerSubject) {
+            return ((PlayerSubject) getTarget()).getPlayer();
+        } else {
+            return null;
+        }
+    }
+
+    public boolean isOverrideDefault() {
+        return overrideDefault;
+    }
+
+    public void setOverrideDefault(boolean overrideDefault) {
+        this.overrideDefault = overrideDefault;
+    }
+
+    public boolean isOverrideDefaultXp() {
+        return overrideDefaultXp;
+    }
+
+    public void setOverrideDefaultXp(boolean overrideDefaultXp) {
+        this.overrideDefaultXp = overrideDefaultXp;
+    }
+
+    public void setReplaceBlockWith(BlockTarget tempReplace) {
+        replaceBlockWith = tempReplace;
+
+    }
+
+    public BlockTarget getReplaceBlockWith() {
+        return replaceBlockWith;
+
+    }
+
+    public boolean isOverrideEquipment() {
+        return this.overrideEquipment;
+    }
+
+    public void setOverrideEquipment(boolean equip) {
+        this.overrideEquipment = equip;
+    }
 }

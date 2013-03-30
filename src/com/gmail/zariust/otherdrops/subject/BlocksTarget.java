@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.subject;
 
 import java.util.ArrayList;
@@ -28,79 +27,88 @@ import com.gmail.zariust.otherdrops.options.ConfigOnly;
 
 @ConfigOnly(BlockTarget.class)
 public class BlocksTarget implements Target {
-	private MaterialGroup group;
-	
-	public BlocksTarget(MaterialGroup grp) {
-		group = grp;
-	}
-	
-	public MaterialGroup getGroup() {
-		return group;
-	}
 
-	@Override
-	public boolean overrideOn100Percent() {
-		return true;
-	}
+    private MaterialGroup group;
 
-	@Override
-	public boolean equals(Object other) {
-		if(!(other instanceof BlocksTarget)) return false;
-		return group == ((BlocksTarget) other).group;
-	}
+    public BlocksTarget(MaterialGroup grp) {
+        group = grp;
+    }
 
-	@Override
-	public int hashCode() {
-		return new HashCode(this).get(group);
-	}
-	
-	@Override
-	public boolean matches(Subject other) {
-		if(!(other instanceof BlockTarget)) return false;
-		BlockTarget block = (BlockTarget) other;
-		return group.contains(block.getMaterial());
-	}
+    public MaterialGroup getGroup() {
+        return group;
+    }
 
-	@Override
-	public ItemCategory getType() {
-		return ItemCategory.BLOCK;
-	}
-	
-	@Override
-	public String toString() {
-		if(group == null) return "ANY_BLOCK";
-		return group.toString();
-	}
+    @Override
+    public boolean overrideOn100Percent() {
+        return true;
+    }
 
-	@Override
-	public List<Target> canMatch() {
-		List<Target> all = new ArrayList<Target>();
-		List<Material> materials = group.materials();
-		for(Material block : materials) all.add(new BlockTarget(block));
-		return all;
-	}
+    @Override
+    public boolean equals(Object other) {
+        if (!(other instanceof BlocksTarget)) {
+            return false;
+        }
+        return group == ((BlocksTarget) other).group;
+    }
 
-	@Override
-	public String getKey() {
-		return null;
-	}
+    @Override
+    public int hashCode() {
+        return new HashCode(this).get(group);
+    }
 
-	@Override // Should never be called due to the annotation
-	public Location getLocation() {
-		return null;
-	}
+    @Override
+    public boolean matches(Subject other) {
+        if (!(other instanceof BlockTarget)) {
+            return false;
+        }
+        BlockTarget block = (BlockTarget) other;
+        return group.contains(block.getMaterial());
+    }
 
-	@Override // It's a wildcard, so we don't need anything here. The annotation should prevent it from being called.
-	public void setTo(BlockTarget replacement) {}
+    @Override
+    public ItemCategory getType() {
+        return ItemCategory.BLOCK;
+    }
 
-	@Override
-	public Data getData() {
-		return null;
-	}
-	
-	@Override
-	public String getReadableName() {
-		return toString();
-	}
+    @Override
+    public String toString() {
+        if (group == null) {
+            return "ANY_BLOCK";
+        }
+        return group.toString();
+    }
 
+    @Override
+    public List<Target> canMatch() {
+        List<Target> all = new ArrayList<Target>();
+        List<Material> materials = group.materials();
+        for (Material block : materials) {
+            all.add(new BlockTarget(block));
+        }
+        return all;
+    }
+
+    @Override
+    public String getKey() {
+        return null;
+    }
+
+    @Override // Should never be called due to the annotation
+    public Location getLocation() {
+        return null;
+    }
+
+    @Override // It's a wildcard, so we don't need anything here. The annotation should prevent it from being called.
+    public void setTo(BlockTarget replacement) {
+    }
+
+    @Override
+    public Data getData() {
+        return null;
+    }
+
+    @Override
+    public String getReadableName() {
+        return toString();
+    }
 }

@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.subject;
 
 import java.util.ArrayList;
@@ -32,143 +31,169 @@ import com.gmail.zariust.otherdrops.data.Data;
 import com.gmail.zariust.otherdrops.options.ToolDamage;
 
 public class EnvironmentAgent implements Agent {
-	private List<DamageCause> dmg;
-	private Object extra;
-	// TODO: Need auxiliary data?
-	
-	public EnvironmentAgent() {
-		this(null, null);
-	}
-	
-	public EnvironmentAgent(DamageCause tool) {
-		dmg = new ArrayList<DamageCause>();
-		dmg.add(tool);
-		this.extra = null;
-	}
 
-	public EnvironmentAgent(List<DamageCause> tool) {
-		this(tool, null);
-	}
+    private List<DamageCause> dmg;
+    private Object extra;
+    // TODO: Need auxiliary data?
 
-	public EnvironmentAgent(List<DamageCause> tool, Object extra) {
-		dmg = tool;
-		this.extra = extra;
-	}
+    public EnvironmentAgent() {
+        this(null, null);
+    }
 
-	private EnvironmentAgent equalsHelper(Object other) {
-		if(!(other instanceof EnvironmentAgent)) return null;
-		return (EnvironmentAgent) other;
-	}
+    public EnvironmentAgent(DamageCause tool) {
+        dmg = new ArrayList<DamageCause>();
+        dmg.add(tool);
+        this.extra = null;
+    }
 
-	private boolean isEqual(EnvironmentAgent tool) {
-		if(tool == null) return false;
-		boolean match = false;
-		for (DamageCause cause : tool.dmg) {
-			if (dmg.contains(cause)) match = true;
-		}
-		return match;
-	}
+    public EnvironmentAgent(List<DamageCause> tool) {
+        this(tool, null);
+    }
 
-	@Override
-	public boolean equals(Object other) {
-		EnvironmentAgent tool = equalsHelper(other);
-		return isEqual(tool);
-	}
+    public EnvironmentAgent(List<DamageCause> tool, Object extra) {
+        dmg = tool;
+        this.extra = extra;
+    }
 
-	@Override
-	public boolean matches(Subject other) {
-		// TODO: Is this right? Will all creature/player agents coincide with ENTITY_ATTACK and all projectile
-		// agents with PROJECTILE?
-		if(dmg.contains(DamageCause.ENTITY_ATTACK) && (other instanceof CreatureSubject || other instanceof PlayerSubject))
-			return true;
-		else if(dmg.contains(DamageCause.PROJECTILE) && other instanceof ProjectileAgent)
-			return true;
-		EnvironmentAgent tool = equalsHelper(other);
-		if(dmg == null) return true;
-		return isEqual(tool);
-	}
+    private EnvironmentAgent equalsHelper(Object other) {
+        if (!(other instanceof EnvironmentAgent)) {
+            return null;
+        }
+        return (EnvironmentAgent) other;
+    }
 
-	@Override
-	public int hashCode() {
-		return new HashCode(this).get(dmg);
-	}
-	
-	public List<DamageCause> getDamageCauses() {
-		return dmg;
-	}
+    private boolean isEqual(EnvironmentAgent tool) {
+        if (tool == null) {
+            return false;
+        }
+        boolean match = false;
+        for (DamageCause cause : tool.dmg) {
+            if (dmg.contains(cause)) {
+                match = true;
+            }
+        }
+        return match;
+    }
 
-	@Override
-	public ItemCategory getType() {
-		return ItemCategory.DAMAGE;
-	}
+    @Override
+    public boolean equals(Object other) {
+        EnvironmentAgent tool = equalsHelper(other);
+        return isEqual(tool);
+    }
 
-	@Override public void damage(int amount) {}
+    @Override
+    public boolean matches(Subject other) {
+        // TODO: Is this right? Will all creature/player agents coincide with ENTITY_ATTACK and all projectile
+        // agents with PROJECTILE?
+        if (dmg.contains(DamageCause.ENTITY_ATTACK) && (other instanceof CreatureSubject || other instanceof PlayerSubject)) {
+            return true;
+        } else if (dmg.contains(DamageCause.PROJECTILE) && other instanceof ProjectileAgent) {
+            return true;
+        }
+        EnvironmentAgent tool = equalsHelper(other);
+        if (dmg == null) {
+            return true;
+        }
+        return isEqual(tool);
+    }
 
-	@Override public void damageTool(ToolDamage amount, Random rng) {}
+    @Override
+    public int hashCode() {
+        return new HashCode(this).get(dmg);
+    }
 
-	public static EnvironmentAgent parse(String name, String data) {
-		name = name.toUpperCase().replace("DAMAGE_", "");
-		List <DamageCause> causes = new ArrayList<DamageCause>();
-		try {
-			DamageCause enumCause = enumValue(DamageCause.class, name);
-			if (enumCause != null) causes.add(enumCause);
-			//if(cause == DamageCause.FIRE_TICK || cause == DamageCause.CUSTOM) return null;
-			//else if(cause == DamageCause.FIRE) cause = DamageCause.FIRE_TICK; // FIRE can be a valid environmental death
-		} catch(IllegalArgumentException e) {
-		}
-		if (causes.isEmpty()) {
-			if(name.equals("WATER")) 
-				causes.add(DamageCause.CUSTOM);
-			else if(name.equals("BURN")) {
-				causes.add(DamageCause.FIRE_TICK);
-				causes.add(DamageCause.FIRE);
-				causes.add(DamageCause.LAVA);
-			}
-			else return null;
-		}
-		//else return null;
-		// TODO: Make use of this, somehow
-		Object extra = parseData(name, data);
-		return new EnvironmentAgent(causes, extra);
-	}
+    public List<DamageCause> getDamageCauses() {
+        return dmg;
+    }
 
-	private static Object parseData(String name, String data) {
-		if (name.equalsIgnoreCase("SUFFOCATION") || name.equalsIgnoreCase("BLOCK_EXPLOSION") || name.equalsIgnoreCase("CONTACT")) {
-			// TODO: Specify block?
-			return Material.getMaterial(data);
-		} else if (name.equalsIgnoreCase("ENTITY_ATTACK") || name.equalsIgnoreCase("ENTITY_EXPLOSION")) {
-			// TODO: Specify entity?
-			EntityType creature = CommonEntity.getCreatureEntityType(data);
-			if(creature != null) return creature;
-			if(data.equalsIgnoreCase("PLAYER")) return ItemCategory.PLAYER;
-			if(data.equalsIgnoreCase("FIREBALL")) return ItemCategory.EXPLOSION;
-		} else if (name.equalsIgnoreCase("FALL")) {
-			// TODO: Specify distance?
-			if (data.isEmpty()) data = "0";
-			return Integer.parseInt(data);
-		}
-		return null;
-	}
+    @Override
+    public ItemCategory getType() {
+        return ItemCategory.DAMAGE;
+    }
 
-	@Override
-	public Location getLocation() {
-		return null;
-	}
+    @Override
+    public void damage(int amount) {
+    }
 
-	@Override
-	public String toString() {
-		if(dmg == null) return "ANY_DAMAGE";
-		return dmg.toString();
-	}
+    @Override
+    public void damageTool(ToolDamage amount, Random rng) {
+    }
 
-	@Override
-	public Data getData() {
-		return null;
-	}
-	
-	@Override
-	public String getReadableName() {
-		return toString();
-	}
+    public static EnvironmentAgent parse(String name, String data) {
+        name = name.toUpperCase().replace("DAMAGE_", "");
+        List<DamageCause> causes = new ArrayList<DamageCause>();
+        try {
+            DamageCause enumCause = enumValue(DamageCause.class, name);
+            if (enumCause != null) {
+                causes.add(enumCause);
+            }
+            //if(cause == DamageCause.FIRE_TICK || cause == DamageCause.CUSTOM) return null;
+            //else if(cause == DamageCause.FIRE) cause = DamageCause.FIRE_TICK; // FIRE can be a valid environmental death
+        } catch (IllegalArgumentException e) {
+        }
+        if (causes.isEmpty()) {
+            if (name.equals("WATER")) {
+                causes.add(DamageCause.CUSTOM);
+            } else if (name.equals("BURN")) {
+                causes.add(DamageCause.FIRE_TICK);
+                causes.add(DamageCause.FIRE);
+                causes.add(DamageCause.LAVA);
+            } else {
+                return null;
+            }
+        }
+        //else return null;
+        // TODO: Make use of this, somehow
+        Object extra = parseData(name, data);
+        return new EnvironmentAgent(causes, extra);
+    }
 
+    private static Object parseData(String name, String data) {
+        if (name.equalsIgnoreCase("SUFFOCATION") || name.equalsIgnoreCase("BLOCK_EXPLOSION") || name.equalsIgnoreCase("CONTACT")) {
+            // TODO: Specify block?
+            return Material.getMaterial(data);
+        } else if (name.equalsIgnoreCase("ENTITY_ATTACK") || name.equalsIgnoreCase("ENTITY_EXPLOSION")) {
+            // TODO: Specify entity?
+            EntityType creature = CommonEntity.getCreatureEntityType(data);
+            if (creature != null) {
+                return creature;
+            }
+            if (data.equalsIgnoreCase("PLAYER")) {
+                return ItemCategory.PLAYER;
+            }
+            if (data.equalsIgnoreCase("FIREBALL")) {
+                return ItemCategory.EXPLOSION;
+            }
+        } else if (name.equalsIgnoreCase("FALL")) {
+            // TODO: Specify distance?
+            if (data.isEmpty()) {
+                data = "0";
+            }
+            return Integer.parseInt(data);
+        }
+        return null;
+    }
+
+    @Override
+    public Location getLocation() {
+        return null;
+    }
+
+    @Override
+    public String toString() {
+        if (dmg == null) {
+            return "ANY_DAMAGE";
+        }
+        return dmg.toString();
+    }
+
+    @Override
+    public Data getData() {
+        return null;
+    }
+
+    @Override
+    public String getReadableName() {
+        return toString();
+    }
 }

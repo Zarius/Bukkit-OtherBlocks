@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.event;
 
 import java.util.HashMap;
@@ -23,34 +22,36 @@ import java.util.Random;
 import com.gmail.zariust.otherdrops.data.Data;
 
 public class ExclusiveMap {
-	private Random rng;
-	private DropsList currentList;
-	Map<String,ExclusiveKey> map;
-	
-	public ExclusiveMap(DropsList list, AbstractDropEvent parentDrop) {
-		currentList = list;
-		rng = parentDrop.rng;
-		map = new HashMap<String,ExclusiveKey>();
-	}
-	
-	public class ExclusiveKey {
-		public double select, cumul;
-		
-		ExclusiveKey(String key, Data data) {
-			select = rng.nextDouble() * currentList.getExclusiveTotal(key, data);
-			cumul = 0;
-		}
-	}
 
-	public void put(String exclusiveKey, Data data) {
-		map.put(exclusiveKey, new ExclusiveKey(exclusiveKey, data));
-	}
+    private Random rng;
+    private DropsList currentList;
+    Map<String, ExclusiveKey> map;
 
-	public boolean contains(String exclusiveKey) {
-		return map.containsKey(exclusiveKey);
-	}
+    public ExclusiveMap(DropsList list, AbstractDropEvent parentDrop) {
+        currentList = list;
+        rng = parentDrop.rng;
+        map = new HashMap<String, ExclusiveKey>();
+    }
 
-	public ExclusiveKey get(String exclusiveKey) {
-		return map.get(exclusiveKey);
-	}
+    public class ExclusiveKey {
+
+        public double select, cumul;
+
+        ExclusiveKey(String key, Data data) {
+            select = rng.nextDouble() * currentList.getExclusiveTotal(key, data);
+            cumul = 0;
+        }
+    }
+
+    public void put(String exclusiveKey, Data data) {
+        map.put(exclusiveKey, new ExclusiveKey(exclusiveKey, data));
+    }
+
+    public boolean contains(String exclusiveKey) {
+        return map.containsKey(exclusiveKey);
+    }
+
+    public ExclusiveKey get(String exclusiveKey) {
+        return map.get(exclusiveKey);
+    }
 }

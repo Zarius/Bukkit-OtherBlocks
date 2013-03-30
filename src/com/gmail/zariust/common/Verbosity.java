@@ -13,19 +13,21 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.common;
 
 public enum Verbosity {
-	LOW(1), NORMAL(2), HIGH(3), HIGHEST(4), EXTREME(5);
-	private int level;
-	
-	private Verbosity(int lvl) {
-		level = lvl;
-	}
-	
-	public boolean exceeds(Verbosity other) {
-		if(level >= other.level) return true;
-		return false;
-	}
+
+    LOW(1), NORMAL(2), HIGH(3), HIGHEST(4), EXTREME(5);
+    private int level;
+
+    private Verbosity(int lvl) {
+        level = lvl;
+    }
+
+    public boolean exceeds(Verbosity other) {
+        if (level >= other.level) {
+            return true;
+        }
+        return false;
+    }
 }

@@ -9,44 +9,45 @@ import com.gmail.zariust.otherdrops.event.OccurredEvent;
 
 public class ClearDropsAction extends Action {
 
-	//private Collection<PotionEffect> effects = new ArrayList<PotionEffect>();
-	public enum ClearType {
-		XP, DROP, EQUIPMENT
-	}
+    //private Collection<PotionEffect> effects = new ArrayList<PotionEffect>();
+    public enum ClearType {
 
-	private final ClearType clearType;
-	
-	public ClearDropsAction(ClearType cType) {
-		this.clearType = cType;
-	}
+        XP, DROP, EQUIPMENT
+    }
+    private final ClearType clearType;
 
-	@Override
-	public boolean act(CustomDrop drop, OccurredEvent occurence) {
-		
-		return true;
-	}
+    public ClearDropsAction(ClearType cType) {
+        this.clearType = cType;
+    }
 
-	static List<Action> getClearXpAction() {
-		List<Action> actions = new ArrayList<Action>();
-		actions.add(new ClearDropsAction(ClearType.XP));
-		return actions;
-		
-	}
+    @Override
+    public boolean act(CustomDrop drop, OccurredEvent occurence) {
 
-	static List<Action> getClearDropsAction() {
-		List<Action> actions = new ArrayList<Action>();
-		actions.add(new ClearDropsAction(ClearType.DROP));
-		return actions;
-	}
-	static List<Action> getClearEquipmentAction() {
-		List<Action> actions = new ArrayList<Action>();
-		actions.add(new ClearDropsAction(ClearType.EQUIPMENT));
-		return actions;
-	}
+        return true;
+    }
 
-	@Override
-	public List<Action> parse(ConfigurationNode parseMe) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    static List<Action> getClearXpAction() {
+        List<Action> actions = new ArrayList<Action>();
+        actions.add(new ClearDropsAction(ClearType.XP));
+        return actions;
+
+    }
+
+    static List<Action> getClearDropsAction() {
+        List<Action> actions = new ArrayList<Action>();
+        actions.add(new ClearDropsAction(ClearType.DROP));
+        return actions;
+    }
+
+    static List<Action> getClearEquipmentAction() {
+        List<Action> actions = new ArrayList<Action>();
+        actions.add(new ClearDropsAction(ClearType.EQUIPMENT));
+        return actions;
+    }
+
+    @Override
+    public List<Action> parse(ConfigurationNode parseMe) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

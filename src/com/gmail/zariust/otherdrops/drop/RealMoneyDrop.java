@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.drop;
 
 import static java.lang.Math.round;
@@ -29,46 +28,49 @@ import org.bukkit.Location;
 
 public class RealMoneyDrop extends MoneyDrop {
 
-	public RealMoneyDrop(IntRange money, double percent, MoneyDropType type) { // Rome
-		super(money.toDoubleRange(), percent, type);
-	}
-	
-	@Override
-	protected int calculateQuantity(double amount, Random rng) {
-		total = loot.getRandomIn(rng);
-		total = round(total);
-		return (int)amount;
-	}
-	
-	@Override
-	protected DropResult performDrop(Target source, Location where, DropFlags flags) {
-		DropResult dropResult = DropResult.fromOverride(this.overrideDefault);
+    public RealMoneyDrop(IntRange money, double percent, MoneyDropType type) { // Rome
+        super(money.toDoubleRange(), percent, type);
+    }
 
-		
-		if(!Dependencies.hasMoneyDrop())
-			Log.logWarning("Real money drop has been configured but MoneyDrop is not installed.");
-		super.performDrop(source, where, flags);
-		
-		dropResult.setQuantity(1);
-		return dropResult;
-	}
-	
-	@Override
-	protected void dropMoney(Target source, Location where, DropFlags flags, double amount) {
-		if(!Dependencies.hasMoneyDrop()) {
-			super.dropMoney(source, where, flags, amount);
-			return;
-		}
-		if(flags.spread) {
-			int dropAmount = (int)amount, digit = 10;
-			while(dropAmount > 0) {
-				int inThis = dropAmount % digit;
-				dropAmount -= inThis;
-				digit *= 10;
-				if(inThis > 0) Dependencies.getMoneyDrop().dropMoney(where, inThis);
-			}
-		} else {
-			Dependencies.getMoneyDrop().dropMoney(where, (int)amount);
-		}
-	}
+    @Override
+    protected int calculateQuantity(double amount, Random rng) {
+        total = loot.getRandomIn(rng);
+        total = round(total);
+        return (int) amount;
+    }
+
+    @Override
+    protected DropResult performDrop(Target source, Location where, DropFlags flags) {
+        DropResult dropResult = DropResult.fromOverride(this.overrideDefault);
+
+
+        if (!Dependencies.hasMoneyDrop()) {
+            Log.logWarning("Real money drop has been configured but MoneyDrop is not installed.");
+        }
+        super.performDrop(source, where, flags);
+
+        dropResult.setQuantity(1);
+        return dropResult;
+    }
+
+    @Override
+    protected void dropMoney(Target source, Location where, DropFlags flags, double amount) {
+        if (!Dependencies.hasMoneyDrop()) {
+            super.dropMoney(source, where, flags, amount);
+            return;
+        }
+        if (flags.spread) {
+            int dropAmount = (int) amount, digit = 10;
+            while (dropAmount > 0) {
+                int inThis = dropAmount % digit;
+                dropAmount -= inThis;
+                digit *= 10;
+                if (inThis > 0) {
+                    Dependencies.getMoneyDrop().dropMoney(where, inThis);
+                }
+            }
+        } else {
+            Dependencies.getMoneyDrop().dropMoney(where, (int) amount);
+        }
+    }
 }

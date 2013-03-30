@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.odspecialevents;
 
 import java.util.Arrays;
@@ -29,37 +28,48 @@ import com.gmail.zariust.otherdrops.subject.CreatureSubject;
 import com.gmail.zariust.otherdrops.subject.Target;
 
 public class SheepEvents extends SpecialResultHandler {
-	@Override
-	public SpecialResult getNewEvent(String name) {
-		if(name.equalsIgnoreCase("SHEAR")) return new ShearEvent(this, true);
-		else if(name.equalsIgnoreCase("UNSHEAR")) return new ShearEvent(this, false);
-		else if(name.equalsIgnoreCase("SHEARTOGGLE")) return new ShearEvent(this, null);
-		else if(name.equalsIgnoreCase("DYE")) return new DyeEvent(this);
-		return null;
-	}
-	
-	@Override
-	public void onLoad() {
-		logInfo("Sheep v" + getVersion() + " loaded.", Verbosity.HIGH);
-	}
-	
-	@Override
-	public List<String> getEvents() {
-		return Arrays.asList("SHEAR", "UNSHEAR", "SHEARTOGGLE", "DYE");
-	}
-	
-	@Override
-	public String getName() {
-		return "Sheep";
-	}
-	
-	public static boolean canRunFor(AbstractDropEvent drop) {
-		Target target = drop.getTarget();
-		if(!(target instanceof CreatureSubject)) return false;
-		CreatureSubject creature = (CreatureSubject) target;
-		if(creature.getCreature() != EntityType.SHEEP) return false;
-		if(creature.getAgent() != null && creature.getAgent().isDead()) return false;
-		return true;
-	}
-	
+
+    @Override
+    public SpecialResult getNewEvent(String name) {
+        if (name.equalsIgnoreCase("SHEAR")) {
+            return new ShearEvent(this, true);
+        } else if (name.equalsIgnoreCase("UNSHEAR")) {
+            return new ShearEvent(this, false);
+        } else if (name.equalsIgnoreCase("SHEARTOGGLE")) {
+            return new ShearEvent(this, null);
+        } else if (name.equalsIgnoreCase("DYE")) {
+            return new DyeEvent(this);
+        }
+        return null;
+    }
+
+    @Override
+    public void onLoad() {
+        logInfo("Sheep v" + getVersion() + " loaded.", Verbosity.HIGH);
+    }
+
+    @Override
+    public List<String> getEvents() {
+        return Arrays.asList("SHEAR", "UNSHEAR", "SHEARTOGGLE", "DYE");
+    }
+
+    @Override
+    public String getName() {
+        return "Sheep";
+    }
+
+    public static boolean canRunFor(AbstractDropEvent drop) {
+        Target target = drop.getTarget();
+        if (!(target instanceof CreatureSubject)) {
+            return false;
+        }
+        CreatureSubject creature = (CreatureSubject) target;
+        if (creature.getCreature() != EntityType.SHEEP) {
+            return false;
+        }
+        if (creature.getAgent() != null && creature.getAgent().isDead()) {
+            return false;
+        }
+        return true;
+    }
 }
