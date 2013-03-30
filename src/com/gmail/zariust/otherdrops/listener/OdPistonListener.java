@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.listener;
 
 import org.bukkit.block.Block;
@@ -26,29 +25,29 @@ import com.gmail.zariust.common.Verbosity;
 import com.gmail.zariust.otherdrops.Log;
 import com.gmail.zariust.otherdrops.OtherDrops;
 
-public class OdPistonListener implements Listener
-{
-	private OtherDrops parent;
+public class OdPistonListener implements Listener {
 
-	public OdPistonListener(OtherDrops instance) {
-		parent = instance;
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onBlockPistonExtend(BlockPistonExtendEvent event)
-	{
-		if (event.isCancelled()) return;
-		
-		//OccurredEvent drop = new OccurredEvent(event);
-		//parent.performDrop(drop);
-		Log.logInfo("PistonListener: extended.", Verbosity.HIGH);
-		Log.logInfo(event.getBlock().getType().toString());
-		Log.logInfo(event.getBlock().getRelative(event.getDirection()).getType().toString());
-		for (Block block : event.getBlocks()) {
-			Log.logInfo(block.toString());
-		}
-		
-		//TODO: allow a custom list of blocks to monitor for piston events, eg. melon, crops, pumpkin, etc
-	}	
+    private OtherDrops parent;
+
+    public OdPistonListener(OtherDrops instance) {
+        parent = instance;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockPistonExtend(BlockPistonExtendEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+
+        //OccurredEvent drop = new OccurredEvent(event);
+        //parent.performDrop(drop);
+        Log.logInfo("PistonListener: extended.", Verbosity.HIGH);
+        Log.logInfo(event.getBlock().getType().toString());
+        Log.logInfo(event.getBlock().getRelative(event.getDirection()).getType().toString());
+        for (Block block : event.getBlocks()) {
+            Log.logInfo(block.toString());
+        }
+
+        //TODO: allow a custom list of blocks to monitor for piston events, eg. melon, crops, pumpkin, etc
+    }
 }
-

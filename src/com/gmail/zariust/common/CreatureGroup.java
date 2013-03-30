@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.common;
 
 import java.util.ArrayList;
@@ -27,74 +26,76 @@ import org.bukkit.entity.EntityType;
 import static org.bukkit.entity.EntityType.*;
 
 public enum CreatureGroup {
-	CREATURE_HOSTILE(CREEPER, GHAST, GIANT, SKELETON, SLIME, SPIDER, ZOMBIE, CAVE_SPIDER, SILVERFISH),
-	CREATURE_FRIENDLY(COW, CHICKEN, PIG, SHEEP, SQUID),
-	CREATURE_NEUTRAL(PIG_ZOMBIE, WOLF, ENDERMAN),
-	CREATURE_ANIMAL(COW, CHICKEN, PIG, SHEEP, WOLF),
-	CREATURE_UNDEAD(PIG_ZOMBIE, ZOMBIE, SKELETON, ENDERMAN),
-	CREATURE_BUG(SPIDER, CAVE_SPIDER, SILVERFISH),
-	CREATURE_WATER(SQUID),
-	// FIXME:: (Zarius) Lazy aliases - find a better way that covers both with CREATURE_ and without?  
-	CREATURE_LAVASLIME(MAGMA_CUBE),
-	CREATURE_MOOSHROOM(MUSHROOM_COW),
-	CREATURE_SNOW_MAN(SNOWMAN),
-	CREATURE_ENDERDRAGON(ENDER_DRAGON),
 
-	// Add any new ones before this line
-	CREATURE_ANY;
-	private static Map<String, CreatureGroup> lookup = new HashMap<String, CreatureGroup>();
-	private ArrayList<EntityType> mob;
-	
-	static {
-		for(EntityType mob : EntityType.values()) {
-			CREATURE_ANY.mob.add(mob);
-		}
-		for(CreatureGroup group : values())
-			lookup.put(group.name(), group);
-	}
-	
-	private void add(List<EntityType> materials) {
-		mob.addAll(materials);
-	}
-	
-	private CreatureGroup(EntityType... materials) {
-		this();
-		add(Arrays.asList(materials));
-	}
-	
-	private CreatureGroup(CreatureGroup... merge) {
-		this();
-		for(CreatureGroup group : merge)
-			add(group.mob);
-	}
-	
-	private CreatureGroup(List<EntityType> materials, CreatureGroup... merge) {
-		this(merge);
-		add(materials);
-	}
-	
-	private CreatureGroup() {
-		mob = new ArrayList<EntityType>();
-	}
-	
-	@SuppressWarnings("unchecked")
-	public List<EntityType> creatures() {
-		return (List<EntityType>) mob.clone();
-	}
+    CREATURE_HOSTILE(CREEPER, GHAST, GIANT, SKELETON, SLIME, SPIDER, ZOMBIE, CAVE_SPIDER, SILVERFISH),
+    CREATURE_FRIENDLY(COW, CHICKEN, PIG, SHEEP, SQUID),
+    CREATURE_NEUTRAL(PIG_ZOMBIE, WOLF, ENDERMAN),
+    CREATURE_ANIMAL(COW, CHICKEN, PIG, SHEEP, WOLF),
+    CREATURE_UNDEAD(PIG_ZOMBIE, ZOMBIE, SKELETON, ENDERMAN),
+    CREATURE_BUG(SPIDER, CAVE_SPIDER, SILVERFISH),
+    CREATURE_WATER(SQUID),
+    // FIXME:: (Zarius) Lazy aliases - find a better way that covers both with CREATURE_ and without?  
+    CREATURE_LAVASLIME(MAGMA_CUBE),
+    CREATURE_MOOSHROOM(MUSHROOM_COW),
+    CREATURE_SNOW_MAN(SNOWMAN),
+    CREATURE_ENDERDRAGON(ENDER_DRAGON),
+    // Add any new ones before this line
+    CREATURE_ANY;
+    private static Map<String, CreatureGroup> lookup = new HashMap<String, CreatureGroup>();
+    private ArrayList<EntityType> mob;
 
-	public static CreatureGroup get(String string) {
-		return lookup.get(string.toUpperCase());
-	}
+    static {
+        for (EntityType mob : EntityType.values()) {
+            CREATURE_ANY.mob.add(mob);
+        }
+        for (CreatureGroup group : values()) {
+            lookup.put(group.name(), group);
+        }
+    }
 
-	public static Set<String> all() {
-		return lookup.keySet();
-	}
+    private void add(List<EntityType> materials) {
+        mob.addAll(materials);
+    }
 
-	public static boolean isValid(String string) {
-		return lookup.containsKey(string);
-	}
+    private CreatureGroup(EntityType... materials) {
+        this();
+        add(Arrays.asList(materials));
+    }
 
-	public boolean contains(EntityType material) {
-		return mob.contains(material);
-	}
+    private CreatureGroup(CreatureGroup... merge) {
+        this();
+        for (CreatureGroup group : merge) {
+            add(group.mob);
+        }
+    }
+
+    private CreatureGroup(List<EntityType> materials, CreatureGroup... merge) {
+        this(merge);
+        add(materials);
+    }
+
+    private CreatureGroup() {
+        mob = new ArrayList<EntityType>();
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<EntityType> creatures() {
+        return (List<EntityType>) mob.clone();
+    }
+
+    public static CreatureGroup get(String string) {
+        return lookup.get(string.toUpperCase());
+    }
+
+    public static Set<String> all() {
+        return lookup.keySet();
+    }
+
+    public static boolean isValid(String string) {
+        return lookup.containsKey(string);
+    }
+
+    public boolean contains(EntityType material) {
+        return mob.contains(material);
+    }
 }

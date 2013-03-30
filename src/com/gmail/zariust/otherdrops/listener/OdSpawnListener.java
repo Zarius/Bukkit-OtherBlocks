@@ -17,47 +17,48 @@ import com.gmail.zariust.otherdrops.OtherDrops;
 import com.gmail.zariust.otherdrops.OtherDropsConfig;
 import com.gmail.zariust.otherdrops.event.OccurredEvent;
 
-public class OdSpawnListener implements Listener
-{
-	private final OtherDrops parent;
-	
-	/**
-	 *  otherdropSpawned: is a map of location.toString against entitytype.
-	 *  OtherDrops DropType.drop() function should put an entry here of the intended
-	 *  location and entitytype before it is spawned.  This is to avoid an infinite
-	 *  loop that can occur (eg. with config "zombie: {- action: mobspawn, drop: zombie}")
-	 */
-	public static final Map<String, EntityType> otherdropsSpawned = new HashMap<String, EntityType>();
-	
-	public OdSpawnListener(OtherDrops instance) {
-		parent = instance;
-	}
+public class OdSpawnListener implements Listener {
 
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onCreatureSpawn(CreatureSpawnEvent event) {
-		if(event.isCancelled()) return;
-		Log.logInfo("SpawnEvent: before checks.  Spawned by "+event.getSpawnReason().toString(), Verbosity.EXTREME);
+    private final OtherDrops parent;
+    /**
+     * otherdropSpawned: is a map of location.toString against entitytype.
+     * OtherDrops DropType.drop() function should put an entry here of the
+     * intended location and entitytype before it is spawned. This is to avoid
+     * an infinite loop that can occur (eg. with config "zombie: {- action:
+     * mobspawn, drop: zombie}")
+     */
+    public static final Map<String, EntityType> otherdropsSpawned = new HashMap<String, EntityType>();
 
-		// This listener should only be registered if "spawned" condition exists, so tag creature
-		event.getEntity().setMetadata("CreatureSpawnedBy", new FixedMetadataValue(OtherDrops.plugin, event.getSpawnReason().toString()));
+    public OdSpawnListener(OtherDrops instance) {
+        parent = instance;
+    }
 
-		// Only run OccurredEvent/performDrop if "action: SPAWN" trigger used
-		if (OtherDropsConfig.dropForSpawnTrigger) {
-			if (event.getSpawnReason().equals(SpawnReason.CUSTOM)) {
-				// If this is a custom drop make sure that there are no custom drops using
-				// this entity, to avoid an *infinite loop*!
-				if (otherdropsSpawned.get(event.getLocation().toString()) == event.getEntityType()) {
-					if (OtherDropsConfig.spawnTriggerIgnoreOtherDropsSpawn) { // defaults to true unless configured
-						Log.logInfo("SpawnEvent: ignoring spawn from OtherDrops (add spawntrigger_ignores_otherdrops_spawn: false to the config to override, but beware infinite loops).", Verbosity.HIGH);
-						return;
-					}
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+        Log.logInfo("SpawnEvent: before checks.  Spawned by " + event.getSpawnReason().toString(), Verbosity.EXTREME);
 
-				}
-			}
+        // This listener should only be registered if "spawned" condition exists, so tag creature
+        event.getEntity().setMetadata("CreatureSpawnedBy", new FixedMetadataValue(OtherDrops.plugin, event.getSpawnReason().toString()));
 
-			OccurredEvent drop = new OccurredEvent(event);
-			parent.performDrop(drop);
-		}
-	}
+        // Only run OccurredEvent/performDrop if "action: SPAWN" trigger used
+        if (OtherDropsConfig.dropForSpawnTrigger) {
+            if (event.getSpawnReason().equals(SpawnReason.CUSTOM)) {
+                // If this is a custom drop make sure that there are no custom drops using
+                // this entity, to avoid an *infinite loop*!
+                if (otherdropsSpawned.get(event.getLocation().toString()) == event.getEntityType()) {
+                    if (OtherDropsConfig.spawnTriggerIgnoreOtherDropsSpawn) { // defaults to true unless configured
+                        Log.logInfo("SpawnEvent: ignoring spawn from OtherDrops (add spawntrigger_ignores_otherdrops_spawn: false to the config to override, but beware infinite loops).", Verbosity.HIGH);
+                        return;
+                    }
 
+                }
+            }
+
+            OccurredEvent drop = new OccurredEvent(event);
+            parent.performDrop(drop);
+        }
+    }
 }

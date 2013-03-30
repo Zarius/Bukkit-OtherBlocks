@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.data;
 
 import org.bukkit.Material;
@@ -27,67 +26,77 @@ import com.gmail.zariust.common.CommonEntity;
 import com.gmail.zariust.otherdrops.Log;
 
 public class SpawnerData implements Data {
-	private EntityType creature;
 
-	public SpawnerData(BlockState state) {
-		if(state instanceof CreatureSpawner)
-			creature = ((CreatureSpawner)state).getSpawnedType();
-	}
-	
-	public SpawnerData(EntityType type) {
-		creature = type;
-	}
+    private EntityType creature;
 
-	@Override
-	public int getData() {
-		return creature.getTypeId();
-	}
-	
-	@Override
-	public void setData(int d) {
-		EntityType c = EntityType.fromId(d);
-		if(c != null) creature = c;
-	}
-	
-	@Override
-	public boolean matches(Data d) {
-		if(!(d instanceof SpawnerData)) return false;
-		return creature == ((SpawnerData)d).creature;
-	}
-	
-	@Override
-	public String get(Enum<?> mat) {
-		if(mat == Material.MOB_SPAWNER) 
-			return creature.toString();
-		return "";
-	}
+    public SpawnerData(BlockState state) {
+        if (state instanceof CreatureSpawner) {
+            creature = ((CreatureSpawner) state).getSpawnedType();
+        }
+    }
 
-	@Override
-	public void setOn(BlockState state) {
-		if(!(state instanceof CreatureSpawner)) {
-			Log.logWarning("Tried to change a spawner block, but no spawner block was found!");
-			return;
-		}
-		((CreatureSpawner)state).setSpawnedType(creature);
-	}
+    public SpawnerData(EntityType type) {
+        creature = type;
+    }
 
-	@Override // Spawners aren't entities, so nothing to do here.
-	public void setOn(Entity entity, Player witness) {}
+    @Override
+    public int getData() {
+        return creature.getTypeId();
+    }
 
-	public static Data parse(String state) {
-		EntityType type = CommonEntity.getCreatureEntityType(state);
-		if(type != null) return new SpawnerData(type);
-		return null;
-	}
-	
-	@Override
-	public int hashCode() {
-		return creature == null ? 0 : creature.hashCode();
-	}
+    @Override
+    public void setData(int d) {
+        EntityType c = EntityType.fromId(d);
+        if (c != null) {
+            creature = c;
+        }
+    }
 
-	@Override
-	public Boolean getSheared() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public boolean matches(Data d) {
+        if (!(d instanceof SpawnerData)) {
+            return false;
+        }
+        return creature == ((SpawnerData) d).creature;
+    }
+
+    @Override
+    public String get(Enum<?> mat) {
+        if (mat == Material.MOB_SPAWNER) {
+            return creature.toString();
+        }
+        return "";
+    }
+
+    @Override
+    public void setOn(BlockState state) {
+        if (!(state instanceof CreatureSpawner)) {
+            Log.logWarning("Tried to change a spawner block, but no spawner block was found!");
+            return;
+        }
+        ((CreatureSpawner) state).setSpawnedType(creature);
+    }
+
+    @Override // Spawners aren't entities, so nothing to do here.
+    public void setOn(Entity entity, Player witness) {
+    }
+
+    public static Data parse(String state) {
+        EntityType type = CommonEntity.getCreatureEntityType(state);
+        if (type != null) {
+            return new SpawnerData(type);
+        }
+        return null;
+    }
+
+    @Override
+    public int hashCode() {
+        return creature == null ? 0 : creature.hashCode();
+    }
+
+    @Override
+    public Boolean getSheared() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

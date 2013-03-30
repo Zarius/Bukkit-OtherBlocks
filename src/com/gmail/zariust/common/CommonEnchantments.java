@@ -15,174 +15,193 @@ import com.gmail.zariust.otherdrops.OtherDropsConfig;
 import com.gmail.zariust.otherdrops.options.IntRange;
 
 public class CommonEnchantments {
-  // aliases
-	
-	public static List<CMEnchantment> parseEnchantments(String enchantments) {
-		List<CMEnchantment> enchList = new ArrayList<CMEnchantment>();
+    // aliases
 
-		if(!enchantments.isEmpty()) {
-			String[] split3 = enchantments.split("!");
-			Log.logInfo("CommonEnch: processing enchantment: "+enchantments, Verbosity.HIGHEST);
-			for (String loopEnchantment : split3) {
-				CMEnchantment cmEnch = parseFromString(loopEnchantment);
-				if (cmEnch != null) enchList.add(cmEnch);
-			}
-		}
-		
-		return enchList;
-	}
+    public static List<CMEnchantment> parseEnchantments(String enchantments) {
+        List<CMEnchantment> enchList = new ArrayList<CMEnchantment>();
 
-	/**
-	 * @param input
-	 * @return
-	 */
-	private static CMEnchantment parseFromString(String input) {
-		String[] enchSplit = input.split("#");
-		String enchString = enchSplit[0].trim().toLowerCase();
+        if (!enchantments.isEmpty()) {
+            String[] split3 = enchantments.split("!");
+            Log.logInfo("CommonEnch: processing enchantment: " + enchantments, Verbosity.HIGHEST);
+            for (String loopEnchantment : split3) {
+                CMEnchantment cmEnch = parseFromString(loopEnchantment);
+                if (cmEnch != null) {
+                    enchList.add(cmEnch);
+                }
+            }
+        }
 
-		String enchLevel = "";
-		if (enchSplit.length > 1) enchLevel = enchSplit[1];
-		IntRange enchLevelInt = null;
+        return enchList;
+    }
 
-		try {
-			if (!enchLevel.isEmpty() && enchLevel.matches("[0-9-~]*"))
-				enchLevelInt = IntRange.parse(enchLevel);
-		} catch(NumberFormatException x) {
-			// do nothing - default enchLevelInt of 1 is fine (the drop itself will set this to ench.getStartLevel())
-			enchLevelInt = null;
-		}
+    /**
+     * @param input
+     * @return
+     */
+    private static CMEnchantment parseFromString(String input) {
+        String[] enchSplit = input.split("#");
+        String enchString = enchSplit[0].trim().toLowerCase();
 
-		Enchantment ench = getEnchantment(enchString);
+        String enchLevel = "";
+        if (enchSplit.length > 1) {
+            enchLevel = enchSplit[1];
+        }
+        IntRange enchLevelInt = null;
 
-		if (ench == null && !enchString.equalsIgnoreCase("random")) {
-			Log.logInfo("Enchantment ("+input+"=>"+enchString+") not valid.", Verbosity.NORMAL);										
-			return null;
-		}
+        try {
+            if (!enchLevel.isEmpty() && enchLevel.matches("[0-9-~]*")) {
+                enchLevelInt = IntRange.parse(enchLevel);
+            }
+        } catch (NumberFormatException x) {
+            // do nothing - default enchLevelInt of 1 is fine (the drop itself will set this to ench.getStartLevel())
+            enchLevelInt = null;
+        }
 
-		if (ench != null) {
-			if (enchLevelInt == null && !enchLevel.equals("?")) {
-				enchLevelInt = IntRange.parse("1");
+        Enchantment ench = getEnchantment(enchString);
 
-				if (!OtherDropsConfig.enchantmentsIgnoreLevel) {
-					if (enchLevelInt.getMin() < ench.getStartLevel()) enchLevelInt.setMin(ench.getStartLevel());
-					else if (enchLevelInt.getMax() > ench.getMaxLevel()) enchLevelInt.setMax(ench.getMaxLevel());
-				}
-			}
-		}
+        if (ench == null && !enchString.equalsIgnoreCase("random")) {
+            Log.logInfo("Enchantment (" + input + "=>" + enchString + ") not valid.", Verbosity.NORMAL);
+            return null;
+        }
 
-		CMEnchantment cmEnch = new CMEnchantment();
-		cmEnch.setEnch(ench);
-		
-		if (enchLevel.equals("?")) cmEnch.setLevelRange(null);
-		else cmEnch.setLevelRange(enchLevelInt);
+        if (ench != null) {
+            if (enchLevelInt == null && !enchLevel.equals("?")) {
+                enchLevelInt = IntRange.parse("1");
 
-		return cmEnch;
-	}
+                if (!OtherDropsConfig.enchantmentsIgnoreLevel) {
+                    if (enchLevelInt.getMin() < ench.getStartLevel()) {
+                        enchLevelInt.setMin(ench.getStartLevel());
+                    } else if (enchLevelInt.getMax() > ench.getMaxLevel()) {
+                        enchLevelInt.setMax(ench.getMaxLevel());
+                    }
+                }
+            }
+        }
 
-	/** Takes a enchantment name by string and matches
-	 *  to an enchantment value using a little fuzzy
-	 *  matching (strip any space, underscore or dash 
-	 *  and case doesn't matter)
-	 *  
-	 * @param enchString
-	 * @return
-	 */
-	private static Enchantment getEnchantment(String enchString) {
-		// Clean up string - make lowercase and strip space/dash/underscore
-		enchString = enchString.toLowerCase().replaceAll("[\\s_-]", "");
+        CMEnchantment cmEnch = new CMEnchantment();
+        cmEnch.setEnch(ench);
 
-		// Set up aliases (this could probably be done outside the function so
-		// we only do it once (eg. in a support class init or read from a file)
-		Map <String, String> aliases = new HashMap<String, String>();
-		aliases.put("aspectfire", "fireaspect");
-		aliases.put("sharpness", "damageall");
-		aliases.put("smite", "damageundead");
-		aliases.put("punch", "arrowknockback");
-		aliases.put("looting", "lootbonusmobs");
-		aliases.put("fortune", "lootbonusblocks");
-		aliases.put("baneofarthropods", "damageundead");
-		aliases.put("power", "arrowdamage");
-		aliases.put("flame", "arrowfire");
-		aliases.put("infinity", "arrowinfinite");
-		aliases.put("unbreaking", "durability");
-		aliases.put("efficiency", "digspeed");
-		aliases.put("smite", "damageundead");
+        if (enchLevel.equals("?")) {
+            cmEnch.setLevelRange(null);
+        } else {
+            cmEnch.setLevelRange(enchLevelInt);
+        }
 
-		// If an alias exists, use it
-		String alias = aliases.get(enchString);
-		if (alias != null)
-			enchString = alias;
+        return cmEnch;
+    }
 
-		// Loop through all enchantments and match (case insensitive and ignoring space,
-		// underscore and dashes
-		for (Enchantment value : Enchantment.values()) {
-			if (enchString.equalsIgnoreCase(value.getName().replaceAll("[\\s_-]", ""))) {
-				return value;
-			}
-		}
-		
-		return null; // nothing found.
-	}
+    /**
+     * Takes a enchantment name by string and matches to an enchantment value
+     * using a little fuzzy matching (strip any space, underscore or dash and
+     * case doesn't matter)
+     *
+     * @param enchString
+     * @return
+     */
+    private static Enchantment getEnchantment(String enchString) {
+        // Clean up string - make lowercase and strip space/dash/underscore
+        enchString = enchString.toLowerCase().replaceAll("[\\s_-]", "");
 
-	public static boolean containsEnchantment(String enchantments, List<String>enchList) {
-		return false;
-	}
+        // Set up aliases (this could probably be done outside the function so
+        // we only do it once (eg. in a support class init or read from a file)
+        Map<String, String> aliases = new HashMap<String, String>();
+        aliases.put("aspectfire", "fireaspect");
+        aliases.put("sharpness", "damageall");
+        aliases.put("smite", "damageundead");
+        aliases.put("punch", "arrowknockback");
+        aliases.put("looting", "lootbonusmobs");
+        aliases.put("fortune", "lootbonusblocks");
+        aliases.put("baneofarthropods", "damageundead");
+        aliases.put("power", "arrowdamage");
+        aliases.put("flame", "arrowfire");
+        aliases.put("infinity", "arrowinfinite");
+        aliases.put("unbreaking", "durability");
+        aliases.put("efficiency", "digspeed");
+        aliases.put("smite", "damageundead");
 
-	public static ItemStack applyEnchantments(ItemStack stack, List<CMEnchantment> enchantments) {
-		if (enchantments == null) return stack;
-		
-		if (!(enchantments.isEmpty())) {
-			for (CMEnchantment cmEnch : enchantments) {
-				Enchantment ench = cmEnch.getEnch(stack);
-				int level = cmEnch.getLevel();
-				
-				try {
-					if (OtherDropsConfig.enchantmentsUseUnsafe) {
-						stack.addUnsafeEnchantment(ench, level);
-					} else {
-						stack.addEnchantment(ench, level);
-					}
-					Log.logInfo("Enchantment ("+ench.getStartLevel()+"-"+ench.getMaxLevel()+"): "+ench.getName()+"#"+level+" applied.", Verbosity.HIGHEST);
-				} catch (IllegalArgumentException ex) {
-					Log.logInfo("Enchantment ("+ench.getStartLevel()+"-"+ench.getMaxLevel()+"): "+ench.getName()+"#"+level+" cannot be applied ("+ex.getMessage()+").", Verbosity.HIGHEST);
-				}
-			}
-		}
-		return stack;
-	}
+        // If an alias exists, use it
+        String alias = aliases.get(enchString);
+        if (alias != null) {
+            enchString = alias;
+        }
 
-	/**
-	 * @param stack
-	 * @return
-	 */
-	public static Enchantment getRandomEnchantment(ItemStack stack) {
-		Enchantment ench;
-		int length = Enchantment.values().length;
-		ench = Enchantment.values()[OtherDrops.rng.nextInt(length-1)];
-		int count = 0;
-		if (!OtherDropsConfig.enchantmentsUseUnsafe) {
-			while ((stack == null || !ench.canEnchantItem(stack)) && count < 50) {
-				ench = Enchantment.values()[OtherDrops.rng.nextInt(length-1)];
-				count++;  // try only a limited number of times
-			}
-		}
-		return ench;
-	}
+        // Loop through all enchantments and match (case insensitive and ignoring space,
+        // underscore and dashes
+        for (Enchantment value : Enchantment.values()) {
+            if (enchString.equalsIgnoreCase(value.getName().replaceAll("[\\s_-]", ""))) {
+                return value;
+            }
+        }
 
-	// eg. damage_all, d_arach   =   d_arach, damage_all
-	public static boolean matches(List<CMEnchantment> customEnchs, Map<Enchantment, Integer> toolEnchs) {
-		int matchCount = 0;
-		for (CMEnchantment ench: customEnchs) {
-			for (Entry<Enchantment, Integer> entry : toolEnchs.entrySet()) {
-				if (ench.getEnchRaw() != null) if (ench.getEnchRaw() == entry.getKey()) {
-					if (ench.getLevelRange().contains(entry.getValue())) matchCount++;
-				}
-			}
-		}
-		
-		if (matchCount != customEnchs.size()) return false;
-		
-		return true;
-	}
-	
+        return null; // nothing found.
+    }
+
+    public static boolean containsEnchantment(String enchantments, List<String> enchList) {
+        return false;
+    }
+
+    public static ItemStack applyEnchantments(ItemStack stack, List<CMEnchantment> enchantments) {
+        if (enchantments == null) {
+            return stack;
+        }
+
+        if (!(enchantments.isEmpty())) {
+            for (CMEnchantment cmEnch : enchantments) {
+                Enchantment ench = cmEnch.getEnch(stack);
+                int level = cmEnch.getLevel();
+
+                try {
+                    if (OtherDropsConfig.enchantmentsUseUnsafe) {
+                        stack.addUnsafeEnchantment(ench, level);
+                    } else {
+                        stack.addEnchantment(ench, level);
+                    }
+                    Log.logInfo("Enchantment (" + ench.getStartLevel() + "-" + ench.getMaxLevel() + "): " + ench.getName() + "#" + level + " applied.", Verbosity.HIGHEST);
+                } catch (IllegalArgumentException ex) {
+                    Log.logInfo("Enchantment (" + ench.getStartLevel() + "-" + ench.getMaxLevel() + "): " + ench.getName() + "#" + level + " cannot be applied (" + ex.getMessage() + ").", Verbosity.HIGHEST);
+                }
+            }
+        }
+        return stack;
+    }
+
+    /**
+     * @param stack
+     * @return
+     */
+    public static Enchantment getRandomEnchantment(ItemStack stack) {
+        Enchantment ench;
+        int length = Enchantment.values().length;
+        ench = Enchantment.values()[OtherDrops.rng.nextInt(length - 1)];
+        int count = 0;
+        if (!OtherDropsConfig.enchantmentsUseUnsafe) {
+            while ((stack == null || !ench.canEnchantItem(stack)) && count < 50) {
+                ench = Enchantment.values()[OtherDrops.rng.nextInt(length - 1)];
+                count++;  // try only a limited number of times
+            }
+        }
+        return ench;
+    }
+
+    // eg. damage_all, d_arach   =   d_arach, damage_all
+    public static boolean matches(List<CMEnchantment> customEnchs, Map<Enchantment, Integer> toolEnchs) {
+        int matchCount = 0;
+        for (CMEnchantment ench : customEnchs) {
+            for (Entry<Enchantment, Integer> entry : toolEnchs.entrySet()) {
+                if (ench.getEnchRaw() != null) {
+                    if (ench.getEnchRaw() == entry.getKey()) {
+                        if (ench.getLevelRange().contains(entry.getValue())) {
+                            matchCount++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (matchCount != customEnchs.size()) {
+            return false;
+        }
+
+        return true;
+    }
 }

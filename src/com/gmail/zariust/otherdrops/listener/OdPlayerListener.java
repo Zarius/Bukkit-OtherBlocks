@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.listener;
 
 import org.bukkit.event.EventHandler;
@@ -27,40 +26,45 @@ import com.gmail.zariust.otherdrops.Log;
 import com.gmail.zariust.otherdrops.OtherDrops;
 import com.gmail.zariust.otherdrops.event.OccurredEvent;
 
-public class OdPlayerListener implements Listener
-{
-	private OtherDrops parent;
+public class OdPlayerListener implements Listener {
 
-	public OdPlayerListener(OtherDrops instance) {
-		parent = instance;
-	}
-	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerInteract(PlayerInteractEvent event) {
-		if(event.isCancelled()) return;
-		if (event.getClickedBlock() == null) {
-			Log.logWarning("onPlayerInteract: getClickedBlock() is null, skipping. Player="+event.getPlayer().getName(), Verbosity.HIGH);
-			return;
-		}
-		if (event.getPlayer() != null) {
-			if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) {
-			// skip drops for creative mode - TODO: make this configurable?
-			} else {
-				OccurredEvent drop = new OccurredEvent(event);
-				parent.performDrop(drop);
-			}
-		}
-	}
+    private OtherDrops parent;
 
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-		if(event.isCancelled()) return;
-		if (event.getPlayer() != null) if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) {
-			// skip drops for creative mode - TODO: make this configurable?
-		} else {
-			OccurredEvent drop = new OccurredEvent(event);
-			parent.performDrop(drop);
-		}
-	}	
+    public OdPlayerListener(OtherDrops instance) {
+        parent = instance;
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+        if (event.getClickedBlock() == null) {
+            Log.logWarning("onPlayerInteract: getClickedBlock() is null, skipping. Player=" + event.getPlayer().getName(), Verbosity.HIGH);
+            return;
+        }
+        if (event.getPlayer() != null) {
+            if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) {
+                // skip drops for creative mode - TODO: make this configurable?
+            } else {
+                OccurredEvent drop = new OccurredEvent(event);
+                parent.performDrop(drop);
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.isCancelled()) {
+            return;
+        }
+        if (event.getPlayer() != null) {
+            if (event.getPlayer().getGameMode().equals(GameMode.CREATIVE)) {
+                // skip drops for creative mode - TODO: make this configurable?
+            } else {
+                OccurredEvent drop = new OccurredEvent(event);
+                parent.performDrop(drop);
+            }
+        }
+    }
 }
-

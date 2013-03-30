@@ -12,93 +12,102 @@ import com.gmail.zariust.otherdrops.data.CreatureData;
 import com.gmail.zariust.otherdrops.data.Data;
 
 public class PigZombieData extends CreatureData {
-	Integer anger = null; // null = wildcard
-	ZombieData leData = null;
-	
-	public PigZombieData(Integer type, ZombieData leData) {
-		this.anger = type;
-		this.leData = leData;
-	}
 
-	@Override
-	public void setOn(Entity mob, Player owner) {
-		if (mob instanceof PigZombie) {
-			PigZombie z = (PigZombie)mob;
-			if (anger != null) z.setAnger(anger);
-			leData.setOn(mob, owner);
-		}
-	}
+    Integer anger = null; // null = wildcard
+    ZombieData leData = null;
 
-	@Override
-	public boolean matches(Data d) {
-		if(!(d instanceof PigZombieData)) return false;
-		PigZombieData vd = (PigZombieData)d;
+    public PigZombieData(Integer type, ZombieData leData) {
+        this.anger = type;
+        this.leData = leData;
+    }
 
-		if (this.anger != null)
-			if (this.anger != vd.anger) return false;
+    @Override
+    public void setOn(Entity mob, Player owner) {
+        if (mob instanceof PigZombie) {
+            PigZombie z = (PigZombie) mob;
+            if (anger != null) {
+                z.setAnger(anger);
+            }
+            leData.setOn(mob, owner);
+        }
+    }
 
-		if (!leData.matches(vd.leData)) return false;
+    @Override
+    public boolean matches(Data d) {
+        if (!(d instanceof PigZombieData)) {
+            return false;
+        }
+        PigZombieData vd = (PigZombieData) d;
 
-		return true;
-	}
+        if (this.anger != null) {
+            if (this.anger != vd.anger) {
+                return false;
+            }
+        }
 
-	public static CreatureData parseFromEntity(Entity entity) {
-		if (entity instanceof PigZombie) {
-			return new PigZombieData(((PigZombie)entity).getAnger(), (ZombieData)ZombieData.parseFromEntity(entity));
-		} else {
-			Log.logInfo("PigZombieData: error, parseFromEntity given different creature - this shouldn't happen.");
-			return null;
-		}
-		
-	}
-	
-	public static CreatureData parseFromString(String state) {
-		Log.logInfo("PigZombieData: parsing from string.", Verbosity.HIGHEST);
-		Integer anger = null;
-		ZombieData leData = (ZombieData) ZombieData.parseFromString(state);
+        if (!leData.matches(vd.leData)) {
+            return false;
+        }
 
-		// TODO: support range:
-		
-		/* 
-		 * 			if(state.startsWith("RANGE")) return RangeData.parse(state);
-			try {
-				int sz = Integer.parseInt(state);
-				return new CreatureData(sz);
-			} catch(NumberFormatException e) {}
-			break;
+        return true;
+    }
 
-		 */
-		if (!state.isEmpty() && !state.equals("0")) {
-			String split[] = state.split(OtherDropsConfig.CreatureDataSeparator);
+    public static CreatureData parseFromEntity(Entity entity) {
+        if (entity instanceof PigZombie) {
+            return new PigZombieData(((PigZombie) entity).getAnger(), (ZombieData) ZombieData.parseFromEntity(entity));
+        } else {
+            Log.logInfo("PigZombieData: error, parseFromEntity given different creature - this shouldn't happen.");
+            return null;
+        }
 
-			for (String sub : split) {
+    }
 
-				if (sub.matches("[0-9]+")) { // need to check numbers before any .toLowerCase()
-					anger = Integer.valueOf(sub);
-				}
-			}
+    public static CreatureData parseFromString(String state) {
+        Log.logInfo("PigZombieData: parsing from string.", Verbosity.HIGHEST);
+        Integer anger = null;
+        ZombieData leData = (ZombieData) ZombieData.parseFromString(state);
 
-		}
+        // TODO: support range:
 
-		return new PigZombieData(anger, leData);
-	}
-	
+        /* 
+         * 			if(state.startsWith("RANGE")) return RangeData.parse(state);
+         try {
+         int sz = Integer.parseInt(state);
+         return new CreatureData(sz);
+         } catch(NumberFormatException e) {}
+         break;
 
-	
-	@Override
-	public String toString() {
-		String val = "";
-		if (anger != null) {
-			val += "!!" + anger.toString();
-		}
-		val += leData.toString();
-		return val;
-	}
-	
-	@Override
-	public String get(Enum<?> creature) {
-		if(creature instanceof EntityType) return this.toString();
-		return "";
-	}
-	
+         */
+        if (!state.isEmpty() && !state.equals("0")) {
+            String split[] = state.split(OtherDropsConfig.CreatureDataSeparator);
+
+            for (String sub : split) {
+
+                if (sub.matches("[0-9]+")) { // need to check numbers before any .toLowerCase()
+                    anger = Integer.valueOf(sub);
+                }
+            }
+
+        }
+
+        return new PigZombieData(anger, leData);
+    }
+
+    @Override
+    public String toString() {
+        String val = "";
+        if (anger != null) {
+            val += "!!" + anger.toString();
+        }
+        val += leData.toString();
+        return val;
+    }
+
+    @Override
+    public String get(Enum<?> creature) {
+        if (creature instanceof EntityType) {
+            return this.toString();
+        }
+        return "";
+    }
 }

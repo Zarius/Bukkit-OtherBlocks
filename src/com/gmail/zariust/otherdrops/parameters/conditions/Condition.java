@@ -7,19 +7,15 @@ import com.gmail.zariust.otherdrops.event.OccurredEvent;
 import com.gmail.zariust.otherdrops.parameters.Parameter;
 
 public abstract class Condition extends Parameter {
-	String conditionName = "undefined";
-	
-	
-	public final boolean check(CustomDrop drop, OccurredEvent occurrence) {
-		boolean result = checkInstance(drop, occurrence);
-		Log.logInfo("Condition '"+this.getClass().getSimpleName()+"' "+(result?"passed":"failed"), Verbosity.HIGHEST);
-		return result;
-	}
-	
-	protected abstract boolean checkInstance(CustomDrop drop, OccurredEvent occurrence);
 
-	
-	
-	//protected abstract static List<Condition> parseInstance(ConfigurationNode node);
+    String conditionName = "undefined";
 
+    public final boolean check(CustomDrop drop, OccurredEvent occurrence) {
+        boolean result = checkInstance(drop, occurrence);
+        Log.logInfo("Condition '" + this.getClass().getSimpleName() + "' " + (result ? "passed" : "failed"), Verbosity.HIGHEST);
+        return result;
+    }
+
+    protected abstract boolean checkInstance(CustomDrop drop, OccurredEvent occurrence);
+    //protected abstract static List<Condition> parseInstance(ConfigurationNode node);
 }

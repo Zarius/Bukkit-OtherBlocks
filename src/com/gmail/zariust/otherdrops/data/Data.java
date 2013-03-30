@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.data;
 
 import org.bukkit.block.BlockState;
@@ -21,11 +20,18 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 public interface Data {
-	int getData();
-	void setData(int d);
-	boolean matches(Data d);
-	String get(Enum<?> mat);
-	void setOn(BlockState state);
-	void setOn(Entity entity, Player witness);
-	Boolean getSheared(); // FIXME: for creature data only, find a way to move this into creaturedata
+
+    int getData();
+
+    void setData(int d);
+
+    boolean matches(Data d);
+
+    String get(Enum<?> mat);
+
+    void setOn(BlockState state);
+
+    void setOn(Entity entity, Player witness);
+
+    Boolean getSheared(); // FIXME: for creature data only, find a way to move this into creaturedata
 }

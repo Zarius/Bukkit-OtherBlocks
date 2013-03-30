@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.listener;
 
 import org.bukkit.event.EventHandler;
@@ -28,17 +27,17 @@ import com.gmail.zariust.otherdrops.OtherDrops;
 import com.gmail.zariust.otherdrops.event.OccurredEvent;
 
 public class OdVehicleListener implements Listener {
-	private OtherDrops parent;
 
-	public OdVehicleListener(OtherDrops instance)
-	{
-		parent = instance;
-	}
+    private OtherDrops parent;
 
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onVehicleDestroy(VehicleDestroyEvent event) {
-		OccurredEvent drop = new OccurredEvent(event);
-		Log.logInfo("Vechicle drop occurance created. ("+drop.toString()+")",HIGHEST);
-		parent.performDrop(drop);
-	}
+    public OdVehicleListener(OtherDrops instance) {
+        parent = instance;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onVehicleDestroy(VehicleDestroyEvent event) {
+        OccurredEvent drop = new OccurredEvent(event);
+        Log.logInfo("Vechicle drop occurance created. (" + drop.toString() + ")", HIGHEST);
+        parent.performDrop(drop);
+    }
 }

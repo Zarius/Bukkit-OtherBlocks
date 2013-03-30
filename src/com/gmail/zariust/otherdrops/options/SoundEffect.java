@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.options;
 
 import java.util.HashSet;
@@ -30,69 +29,82 @@ import com.gmail.zariust.otherdrops.OtherDropsConfig;
 import com.gmail.zariust.otherdrops.data.EffectData;
 
 public class SoundEffect {
-	private final Effect type;
-	// TODO: Would be nice to include note block sounds in here (missing API though)
-	private final EffectData data;
-	
-	public SoundEffect(Effect effect) {
-		this(effect, null);
-	}
-	
-	public SoundEffect(Effect effect, EffectData d) {
-		type = effect;
-		data = d;
-	}
 
-	public void play(Location location) {
-		if(type != null) {
-			if(data == null)
-				location.getWorld().playEffect(location, type, 0, EffectData.DEFAULT_RADIUS);
-			else location.getWorld().playEffect(location, type, data.getData(), data.getRadius());
-		}
-	}
+    private final Effect type;
+    // TODO: Would be nice to include note block sounds in here (missing API though)
+    private final EffectData data;
 
-	public static SoundEffect parse(String key) {
-		String[] split = key.split("@");
-		String name = split[0], data = "";
-		if(split.length > 1) data = split[1];
-		try {
-			Effect effect = null;
-			for (Effect loopEffect : Effect.values()) {
-				if (CommonMaterial.fuzzyMatchString(loopEffect.name(), name)) {
-					effect = loopEffect;
-				}
-			}
-			if(effect == null) return null;
-			// I believe all data should be uppercase, this could be done at a later
-			// stage if any effect data needs case sensitivity
-			EffectData state = EffectData.parse(effect, data.toUpperCase());
-			return new SoundEffect(effect, state);
-		} catch(IllegalArgumentException e) {
-			return null;
-		}
-	}
+    public SoundEffect(Effect effect) {
+        this(effect, null);
+    }
 
-	public static Set<SoundEffect> parseFrom(ConfigurationNode node) {
-		List<String> effects = OtherDropsConfig.getMaybeList(node, "effect", "effects");
-		if(effects.isEmpty()) return null;
-		Set<SoundEffect> result = new HashSet<SoundEffect>();
-		for(String name : effects) {
-			SoundEffect effect = parse(name);
-			if(effect == null) {
-				Log.logWarning("Invalid effect " + name + "; skipping...");
-				continue;
-			}
-			result.add(effect);
-		}
-		if(result.isEmpty()) return null;
-		return result;
-	}
+    public SoundEffect(Effect effect, EffectData d) {
+        type = effect;
+        data = d;
+    }
 
-	@Override
-	public String toString() {
-		String ret = type.toString();
-		// TODO: Will data ever be null, or will it just be 0?
-		if(data != null) ret += "@" + data.get(type);
-		return ret;
-	}
+    public void play(Location location) {
+        if (type != null) {
+            if (data == null) {
+                location.getWorld().playEffect(location, type, 0, EffectData.DEFAULT_RADIUS);
+            } else {
+                location.getWorld().playEffect(location, type, data.getData(), data.getRadius());
+            }
+        }
+    }
+
+    public static SoundEffect parse(String key) {
+        String[] split = key.split("@");
+        String name = split[0], data = "";
+        if (split.length > 1) {
+            data = split[1];
+        }
+        try {
+            Effect effect = null;
+            for (Effect loopEffect : Effect.values()) {
+                if (CommonMaterial.fuzzyMatchString(loopEffect.name(), name)) {
+                    effect = loopEffect;
+                }
+            }
+            if (effect == null) {
+                return null;
+            }
+            // I believe all data should be uppercase, this could be done at a later
+            // stage if any effect data needs case sensitivity
+            EffectData state = EffectData.parse(effect, data.toUpperCase());
+            return new SoundEffect(effect, state);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public static Set<SoundEffect> parseFrom(ConfigurationNode node) {
+        List<String> effects = OtherDropsConfig.getMaybeList(node, "effect", "effects");
+        if (effects.isEmpty()) {
+            return null;
+        }
+        Set<SoundEffect> result = new HashSet<SoundEffect>();
+        for (String name : effects) {
+            SoundEffect effect = parse(name);
+            if (effect == null) {
+                Log.logWarning("Invalid effect " + name + "; skipping...");
+                continue;
+            }
+            result.add(effect);
+        }
+        if (result.isEmpty()) {
+            return null;
+        }
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        String ret = type.toString();
+        // TODO: Will data ever be null, or will it just be 0?
+        if (data != null) {
+            ret += "@" + data.get(type);
+        }
+        return ret;
+    }
 }

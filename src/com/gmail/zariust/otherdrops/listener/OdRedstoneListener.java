@@ -14,78 +14,79 @@ import com.gmail.zariust.otherdrops.OtherDrops;
 import com.gmail.zariust.otherdrops.OtherDropsConfig;
 import com.gmail.zariust.otherdrops.event.OccurredEvent;
 
-public class OdRedstoneListener implements Listener
-{
-	private final OtherDrops parent;
-	
-	public OdRedstoneListener(OtherDrops instance) {
-		parent = instance;
-	}
+public class OdRedstoneListener implements Listener {
 
-	@EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
-	public void onBlockRedstoneChange(BlockRedstoneEvent event) {
-		Log.logInfo("RedstoneEvent: before checks.", Verbosity.EXTREME);
-		
+    private final OtherDrops parent;
 
-		Block poweredBlock = event.getBlock();
+    public OdRedstoneListener(OtherDrops instance) {
+        parent = instance;
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockRedstoneChange(BlockRedstoneEvent event) {
+        Log.logInfo("RedstoneEvent: before checks.", Verbosity.EXTREME);
+
+
+        Block poweredBlock = event.getBlock();
         int poweredBlockDataValue = poweredBlock.getTypeId();
         byte poweredBlockMetaValue = poweredBlock.getData();
-        Log.dMsg("Block Type: " + poweredBlockDataValue +":" + poweredBlockMetaValue + " (current="+event.getNewCurrent()+")");
+        Log.dMsg("Block Type: " + poweredBlockDataValue + ":" + poweredBlockMetaValue + " (current=" + event.getNewCurrent() + ")");
 
-		if (OtherDropsConfig.dropForRedstoneTrigger) {
-			if ((event.getOldCurrent() - event.getNewCurrent())>0) { // POWER decreasing
-				OccurredEvent drop = new OccurredEvent(event, poweredBlock);
-				parent.performDrop(drop);				
-			} else { // POWER increasing
-				OccurredEvent drop = new OccurredEvent(event, poweredBlock, "UP");
-				parent.performDrop(drop);
-			}
-			// Nothing done if newcurrent == oldcurrent as this wouldn't trigger the event
-			
-			if (OtherDropsConfig.globalRedstonewireTriggersSurrounding &&
-					poweredBlock.getType() == Material.REDSTONE_WIRE) {
-				callOdEvent(event, poweredBlock.getRelative(BlockFace.NORTH));
-				callOdEvent(event, poweredBlock.getRelative(BlockFace.EAST));
-				callOdEvent(event, poweredBlock.getRelative(BlockFace.WEST));
-				callOdEvent(event, poweredBlock.getRelative(BlockFace.SOUTH));
-			}
-		}
-	}
+        if (OtherDropsConfig.dropForRedstoneTrigger) {
+            if ((event.getOldCurrent() - event.getNewCurrent()) > 0) { // POWER decreasing
+                OccurredEvent drop = new OccurredEvent(event, poweredBlock);
+                parent.performDrop(drop);
+            } else { // POWER increasing
+                OccurredEvent drop = new OccurredEvent(event, poweredBlock, "UP");
+                parent.performDrop(drop);
+            }
+            // Nothing done if newcurrent == oldcurrent as this wouldn't trigger the event
 
-	private void callOdEvent(BlockRedstoneEvent event, Block block) {
-		// avoid powerable blocks (otherwise we'd double up since they also get a redstonechange event) and AIR
-		if (!isRedStone(block.getType()) && block.getType() != Material.AIR) {
-			if ((event.getOldCurrent() - event.getNewCurrent())>0) { // POWER decreasing
-				OccurredEvent drop = new OccurredEvent(event, block);
-				parent.performDrop(drop);				
-			} else { // POWER increasing
-				OccurredEvent drop = new OccurredEvent(event, block, "UP");
-				parent.performDrop(drop);
-				
-			}
-		}
-		
-	}
+            if (OtherDropsConfig.globalRedstonewireTriggersSurrounding
+                    && poweredBlock.getType() == Material.REDSTONE_WIRE) {
+                callOdEvent(event, poweredBlock.getRelative(BlockFace.NORTH));
+                callOdEvent(event, poweredBlock.getRelative(BlockFace.EAST));
+                callOdEvent(event, poweredBlock.getRelative(BlockFace.WEST));
+                callOdEvent(event, poweredBlock.getRelative(BlockFace.SOUTH));
+            }
+        }
+    }
 
-	
-	/** Return if the type of material is "powerable".
-	 * Bit of a hack but best we can do for now.
-	 * @param type
-	 * @return
-	 */
-	private boolean isRedStone(Material type) {
-		if (type == Material.REDSTONE_WIRE ||
-				type == Material.STONE_BUTTON ||
-				type == Material.WOOD_BUTTON ||
-				type == Material.LEVER ||
-				type == Material.TRIPWIRE_HOOK ||
-				type == Material.POWERED_RAIL ||
-				type == Material.PISTON_BASE ||
-				type == Material.PISTON_STICKY_BASE ||
-				type == Material.REDSTONE_TORCH_OFF ||
-				type == Material.REDSTONE_TORCH_ON ) {	
-			return true;
-		}
-		return false;
-	}
+    private void callOdEvent(BlockRedstoneEvent event, Block block) {
+        // avoid powerable blocks (otherwise we'd double up since they also get a redstonechange event) and AIR
+        if (!isRedStone(block.getType()) && block.getType() != Material.AIR) {
+            if ((event.getOldCurrent() - event.getNewCurrent()) > 0) { // POWER decreasing
+                OccurredEvent drop = new OccurredEvent(event, block);
+                parent.performDrop(drop);
+            } else { // POWER increasing
+                OccurredEvent drop = new OccurredEvent(event, block, "UP");
+                parent.performDrop(drop);
+
+            }
+        }
+
+    }
+
+    /**
+     * Return if the type of material is "powerable". Bit of a hack but best we
+     * can do for now.
+     *
+     * @param type
+     * @return
+     */
+    private boolean isRedStone(Material type) {
+        if (type == Material.REDSTONE_WIRE
+                || type == Material.STONE_BUTTON
+                || type == Material.WOOD_BUTTON
+                || type == Material.LEVER
+                || type == Material.TRIPWIRE_HOOK
+                || type == Material.POWERED_RAIL
+                || type == Material.PISTON_BASE
+                || type == Material.PISTON_STICKY_BASE
+                || type == Material.REDSTONE_TORCH_OFF
+                || type == Material.REDSTONE_TORCH_ON) {
+            return true;
+        }
+        return false;
+    }
 }

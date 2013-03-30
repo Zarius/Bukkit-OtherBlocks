@@ -13,13 +13,13 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.special;
 
 public class SpecialResultLoadException extends Exception {
-	private static final long serialVersionUID = -2613254331263858552L;
 
-	public SpecialResultLoadException(String message) {
-		super(message);
-	}
+    private static final long serialVersionUID = -2613254331263858552L;
+
+    public SpecialResultLoadException(String message) {
+        super(message);
+    }
 }

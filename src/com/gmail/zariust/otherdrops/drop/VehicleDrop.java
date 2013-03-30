@@ -13,7 +13,6 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.	 If not, see <http://www.gnu.org/licenses/>.
-
 package com.gmail.zariust.otherdrops.drop;
 
 import com.gmail.zariust.otherdrops.data.ContainerData;
@@ -34,110 +33,119 @@ import org.bukkit.entity.PoweredMinecart;
 import org.bukkit.entity.StorageMinecart;
 
 public class VehicleDrop extends DropType {
-	private Material vessel;
-	private IntRange quantity;
-	private int rolledQuantity;
-	private Data data;
-	
-	public VehicleDrop(Material vehicle) {
-		this(new IntRange(1), vehicle);
-	}
-	
-	public VehicleDrop(Material vehicle, double percent) {
-		this(new IntRange(1), vehicle, percent);
-	}
 
-	public VehicleDrop(IntRange amount, Material vehicle) {
-		this(amount, vehicle, 100.0);
-	}
+    private Material vessel;
+    private IntRange quantity;
+    private int rolledQuantity;
+    private Data data;
 
-	public VehicleDrop(IntRange amount, Material vehicle, double percent) {
-		this(amount, vehicle, null, percent);
-	}
+    public VehicleDrop(Material vehicle) {
+        this(new IntRange(1), vehicle);
+    }
 
-	public VehicleDrop(IntRange amount, Material vehicle, Data d, double percent) {
-		super(DropCategory.VEHICLE, percent);
-		vessel = vehicle;
-		quantity = amount;
-		data = d;
-	}
+    public VehicleDrop(Material vehicle, double percent) {
+        this(new IntRange(1), vehicle, percent);
+    }
 
-	@Override
-	protected DropResult performDrop(Target source, Location where, DropFlags flags) {
-		DropResult dropResult = DropResult.fromOverride(this.overrideDefault);
+    public VehicleDrop(IntRange amount, Material vehicle) {
+        this(amount, vehicle, 100.0);
+    }
 
-		int quantityActuallyDropped = 0; 
-		World world = where.getWorld();
-		rolledQuantity = quantity.getRandomIn(flags.rng);
-		int amount = rolledQuantity;
-		while(amount-- > 0) {
-			quantityActuallyDropped++;
-			Entity entity;
-			switch(vessel) {
-			case BOAT:
-				entity = world.spawn(where, Boat.class);
-				break;
-			case POWERED_MINECART:
-				entity = world.spawn(where, PoweredMinecart.class);
-				break;
-			case STORAGE_MINECART:
-				entity = world.spawn(where, StorageMinecart.class);
-				break;
-			case MINECART:
-				entity = world.spawn(where, Minecart.class);
-				break;
-			case PAINTING: // Probably won't actually work
-				entity = world.spawn(where, Painting.class);
-				break;
-			default:
-				continue;
-			}
-			data.setOn(entity, flags.recipient);
-		}
-		dropResult.setQuantity(quantityActuallyDropped);
-		return dropResult;
-	}
+    public VehicleDrop(IntRange amount, Material vehicle, double percent) {
+        this(amount, vehicle, null, percent);
+    }
 
-	public static DropType parse(String drop, String data, IntRange amount, double chance) {
-		drop = drop.toUpperCase().replace("VEHICLE_", "");
-		String[] split = null;
-		if (drop.matches("\\w+:.*")) {
-			split = drop.split(":",2);
-		} else
-			split = drop.split("@", 2);
-		if(split.length > 1) data = split[1];
-		String name = split[0];
-		if(name.equals("BOAT"))
-			return new VehicleDrop(amount, Material.BOAT, chance);
-		if(name.equals("POWERED_MINECART"))
-			return new VehicleDrop(amount, Material.POWERED_MINECART, chance); // TODO: Power? (needs API?)
-		if(name.equals("STORAGE_MINECART")) {
-			Data state = ContainerData.parse(Material.STORAGE_MINECART, data);
-			return new VehicleDrop(amount, Material.STORAGE_MINECART, state, chance);
-		}
-		if(name.equals("MINECART")) {
-			Data state = VehicleData.parse(Material.MINECART, data);
-			return new VehicleDrop(amount, Material.MINECART, state, chance);
-		}
-		if(name.equals("PAINTING"))
-			return new VehicleDrop(amount, Material.PAINTING, chance); // TODO: Art? (needs API)
-		return null;
-	}
+    public VehicleDrop(IntRange amount, Material vehicle, Data d, double percent) {
+        super(DropCategory.VEHICLE, percent);
+        vessel = vehicle;
+        quantity = amount;
+        data = d;
+    }
 
-	@Override
-	public String getName() {
-		String ret = "VEHICLE_" + vessel.toString();
-		if(data != null) ret += "@" + data.get(vessel);
-		return ret;
-	}
+    @Override
+    protected DropResult performDrop(Target source, Location where, DropFlags flags) {
+        DropResult dropResult = DropResult.fromOverride(this.overrideDefault);
 
-	@Override
-	public double getAmount() {
-		return rolledQuantity;
-	}
+        int quantityActuallyDropped = 0;
+        World world = where.getWorld();
+        rolledQuantity = quantity.getRandomIn(flags.rng);
+        int amount = rolledQuantity;
+        while (amount-- > 0) {
+            quantityActuallyDropped++;
+            Entity entity;
+            switch (vessel) {
+                case BOAT:
+                    entity = world.spawn(where, Boat.class);
+                    break;
+                case POWERED_MINECART:
+                    entity = world.spawn(where, PoweredMinecart.class);
+                    break;
+                case STORAGE_MINECART:
+                    entity = world.spawn(where, StorageMinecart.class);
+                    break;
+                case MINECART:
+                    entity = world.spawn(where, Minecart.class);
+                    break;
+                case PAINTING: // Probably won't actually work
+                    entity = world.spawn(where, Painting.class);
+                    break;
+                default:
+                    continue;
+            }
+            data.setOn(entity, flags.recipient);
+        }
+        dropResult.setQuantity(quantityActuallyDropped);
+        return dropResult;
+    }
 
-	@Override
-	public DoubleRange getAmountRange() {
-		return quantity.toDoubleRange();
-	}
+    public static DropType parse(String drop, String data, IntRange amount, double chance) {
+        drop = drop.toUpperCase().replace("VEHICLE_", "");
+        String[] split = null;
+        if (drop.matches("\\w+:.*")) {
+            split = drop.split(":", 2);
+        } else {
+            split = drop.split("@", 2);
+        }
+        if (split.length > 1) {
+            data = split[1];
+        }
+        String name = split[0];
+        if (name.equals("BOAT")) {
+            return new VehicleDrop(amount, Material.BOAT, chance);
+        }
+        if (name.equals("POWERED_MINECART")) {
+            return new VehicleDrop(amount, Material.POWERED_MINECART, chance); // TODO: Power? (needs API?)
+        }
+        if (name.equals("STORAGE_MINECART")) {
+            Data state = ContainerData.parse(Material.STORAGE_MINECART, data);
+            return new VehicleDrop(amount, Material.STORAGE_MINECART, state, chance);
+        }
+        if (name.equals("MINECART")) {
+            Data state = VehicleData.parse(Material.MINECART, data);
+            return new VehicleDrop(amount, Material.MINECART, state, chance);
+        }
+        if (name.equals("PAINTING")) {
+            return new VehicleDrop(amount, Material.PAINTING, chance); // TODO: Art? (needs API)
+        }
+        return null;
+    }
+
+    @Override
+    public String getName() {
+        String ret = "VEHICLE_" + vessel.toString();
+        if (data != null) {
+            ret += "@" + data.get(vessel);
+        }
+        return ret;
+    }
+
+    @Override
+    public double getAmount() {
+        return rolledQuantity;
+    }
+
+    @Override
+    public DoubleRange getAmountRange() {
+        return quantity.toDoubleRange();
+    }
 }
