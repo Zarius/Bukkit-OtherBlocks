@@ -81,6 +81,7 @@ import com.gmail.zariust.otherdrops.parameters.conditions.CooldownCheck;
 import com.gmail.zariust.otherdrops.parameters.conditions.LoreNameCheck;
 import com.gmail.zariust.otherdrops.parameters.conditions.MobSpawnerCheck;
 import com.gmail.zariust.otherdrops.parameters.conditions.SpawnedCheck;
+import com.gmail.zariust.otherdrops.parameters.conditions.PlayerSneakCheck;
 import com.gmail.zariust.otherdrops.special.SpecialResult;
 import com.gmail.zariust.otherdrops.special.SpecialResultHandler;
 import com.gmail.zariust.otherdrops.special.SpecialResultLoader;
