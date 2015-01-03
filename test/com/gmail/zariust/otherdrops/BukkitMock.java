@@ -1,5 +1,6 @@
 package com.gmail.zariust.otherdrops;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Collection;
 import java.util.Iterator;
@@ -9,6 +10,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import org.bukkit.BanList;
+import org.bukkit.BanList.Type;
 import org.bukkit.BlockChangeDelegate;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
@@ -22,8 +25,10 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.TreeType;
+import org.bukkit.UnsafeValues;
 import org.bukkit.Warning.WarningState;
 import org.bukkit.World;
+import org.bukkit.WorldBorder;
 import org.bukkit.WorldCreator;
 import org.bukkit.WorldType;
 import org.bukkit.block.Biome;
@@ -58,6 +63,7 @@ import org.bukkit.plugin.ServicesManager;
 import org.bukkit.plugin.messaging.Messenger;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.util.CachedServerIcon;
 import org.bukkit.util.Vector;
 
 import com.avaje.ebean.config.ServerConfig;
@@ -319,7 +325,7 @@ public class BukkitMock {
             }
 
             @Override
-            public Player[] getOnlinePlayers() {
+            public Collection<? extends Player> getOnlinePlayers() {
                 // TODO Auto-generated method stub
                 return null;
             }
@@ -593,6 +599,72 @@ public class BukkitMock {
 
             @Override
             public ScoreboardManager getScoreboardManager() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public Player[] _INVALID_getOnlinePlayers() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public Player getPlayer(UUID id) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public OfflinePlayer getOfflinePlayer(UUID id) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public BanList getBanList(Type type) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public Inventory createInventory(InventoryHolder owner, InventoryType type, String title) {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public CachedServerIcon getServerIcon() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public CachedServerIcon loadServerIcon(File file) throws IllegalArgumentException, Exception {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public CachedServerIcon loadServerIcon(BufferedImage image) throws IllegalArgumentException, Exception {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public void setIdleTimeout(int threshold) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public int getIdleTimeout() {
+                // TODO Auto-generated method stub
+                return 0;
+            }
+
+            @Override
+            public UnsafeValues getUnsafe() {
                 // TODO Auto-generated method stub
                 return null;
             }
@@ -1331,6 +1403,12 @@ public class BukkitMock {
                 // TODO Auto-generated method stub
                 return null;
             }
+
+            @Override
+            public WorldBorder getWorldBorder() {
+                // TODO Auto-generated method stub
+                return null;
+            }
     
         };
     }
@@ -2064,6 +2142,12 @@ public class BukkitMock {
             @Override
             public FallingBlock spawnFallingBlock(Location arg0, int arg1,
                     byte arg2) throws IllegalArgumentException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public WorldBorder getWorldBorder() {
                 // TODO Auto-generated method stub
                 return null;
             }

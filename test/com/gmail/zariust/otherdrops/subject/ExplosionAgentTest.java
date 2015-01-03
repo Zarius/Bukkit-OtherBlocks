@@ -418,6 +418,30 @@ public class ExplosionAgentTest {
                 // TODO Auto-generated method stub
                 return null;
             }
+
+            @Override
+            public void setCustomName(String name) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public String getCustomName() {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public void setCustomNameVisible(boolean flag) {
+                // TODO Auto-generated method stub
+                
+            }
+
+            @Override
+            public boolean isCustomNameVisible() {
+                // TODO Auto-generated method stub
+                return false;
+            }
         };
     }
 
@@ -1004,6 +1028,30 @@ public class ExplosionAgentTest {
             public double getMaxHealth() {
                 // TODO Auto-generated method stub
                 return 0;
+            }
+
+            @Override
+            public boolean isLeashed() {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public Entity getLeashHolder() throws IllegalStateException {
+                // TODO Auto-generated method stub
+                return null;
+            }
+
+            @Override
+            public boolean setLeashHolder(Entity holder) {
+                // TODO Auto-generated method stub
+                return false;
+            }
+
+            @Override
+            public <T extends Projectile> T launchProjectile(Class<? extends T> projectile, Vector velocity) {
+                // TODO Auto-generated method stub
+                return null;
             }
         };
     }
