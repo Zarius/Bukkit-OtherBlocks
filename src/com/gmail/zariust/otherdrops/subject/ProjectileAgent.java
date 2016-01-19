@@ -26,8 +26,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.projectiles.ProjectileSource;
 
 import static com.gmail.zariust.common.Verbosity.*;
+
 import com.gmail.zariust.common.CommonEntity;
 import com.gmail.zariust.common.Verbosity;
 import com.gmail.zariust.otherdrops.Log;
@@ -99,22 +101,30 @@ public class ProjectileAgent implements Agent {
     private static LivingSubject getShooterAgent(Projectile missile) {
         // Get the LivingAgent representing the shooter, which could be null, a
         // CreatureAgent, or a PlayerAgent
-        LivingEntity shooter = missile.getShooter();
+        ProjectileSource shooter = missile.getShooter();
         if (shooter == null)
             return null;
         else if (shooter instanceof Player)
             return new PlayerSubject((Player) shooter);
+        else if (shooter instanceof LivingEntity)
+            return new CreatureSubject((LivingEntity) shooter);
         else
-            return new CreatureSubject(shooter);
+            return null;
 
     }
 
-    private static Data getShooterData(LivingEntity shooter) {
-        return CreatureData.parse(shooter);
+    private static Data getShooterData(ProjectileSource shooter) {
+        if (shooter instanceof LivingEntity)
+            return CreatureData.parse((LivingEntity) shooter);
+        else
+            return null;
     }
 
-    private static EntityType getShooterType(LivingEntity shooter) {
-        return shooter.getType();
+    private static EntityType getShooterType(ProjectileSource shooter) {
+        if (shooter instanceof LivingEntity)
+            return ((LivingEntity) shooter).getType();
+        else
+            return null;
     }
 
     private ProjectileAgent equalsHelper(Object other) {
@@ -230,7 +240,9 @@ public class ProjectileAgent implements Agent {
         // FIXME: why is this sometimes null? Is it ok?
         if (agent.getShooter() == null)
             return;
-        agent.getShooter().damage(amount);
+        
+        if (agent.getShooter() instanceof LivingEntity)
+            ((LivingEntity) agent.getShooter()).damage(amount);
     }
 
     public EntityType getCreature() {
@@ -312,8 +324,8 @@ public class ProjectileAgent implements Agent {
                     HIGH);
             return null;
         }
-        if (agent.getShooter() != null)
-            return agent.getShooter().getLocation();
+        if (agent.getShooter() != null && agent.getShooter() instanceof LivingEntity)
+            return ((LivingEntity) agent.getShooter()).getLocation();
         return null;
     }
 
