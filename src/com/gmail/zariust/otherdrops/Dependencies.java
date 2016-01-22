@@ -24,6 +24,7 @@ import java.io.IOException;
 
 import me.botsko.prism.Prism;
 import me.botsko.prism.actionlibs.ActionFactory;
+import me.botsko.prism.actionlibs.RecordingQueue;
 import me.drakespirit.plugins.moneydrop.MoneyDrop;
 import me.taylorkelly.bigbrother.BigBrother;
 import net.coreprotect.CoreProtect;
@@ -342,7 +343,7 @@ public class Dependencies {
 
         if (hasPrism()) {
             Log.logInfo("Attempting to log to Prism (" + message + ")", HIGHEST);
-            Prism.actionsRecorder.addToQueue(ActionFactory.create(
+            RecordingQueue.addToQueue(ActionFactory.create(
                     "block-break", block, playerName));
         }
         return true;
