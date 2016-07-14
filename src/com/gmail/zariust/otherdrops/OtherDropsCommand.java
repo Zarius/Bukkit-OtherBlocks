@@ -677,7 +677,7 @@ public class OtherDropsCommand implements CommandExecutor {
         }
     }
 
-    // returns null if not durability is not valid (ie. Has no “maxdurability”)
+    // returns null if not durability is not valid (ie. Has no "maxdurability")
     private Double getDurabilityPercentage(ItemStack item) {
         Double maxDura = Double.valueOf(item.getType().getMaxDurability());
         Double dura = Double.valueOf(item.getDurability());
